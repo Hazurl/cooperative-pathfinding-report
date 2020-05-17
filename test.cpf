@@ -1,0 +1,18 @@
+# Number of nodes
+5
+
+# Number of edges
+4
+
+# Graph's edges
+0 1
+1 2
+1 4
+2 3
+
+# Number of agents
+2
+
+# Agents initial and goal nodes
+0 2
+3 4
