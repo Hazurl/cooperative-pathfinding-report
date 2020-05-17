@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <chrono>
 #include <cassert>
 
 #include <glucose-syrup-4.1/utils/System.h>
@@ -187,7 +188,7 @@ bool build_context(Context& context, Graph const& graph, std::vector<Agent> cons
         }
 
         if (!has_variable) {
-            std::cout << "No path for agent " << a << '\n';
+            std::cout << "\tNo path for agent " << a << " found in the MDD\n";
             return false;
         }
     }
@@ -360,36 +361,61 @@ int main(int argc, char** argv)
     Context context;
     std::vector<bool> res;
 
+    auto clock_all_begin = std::chrono::steady_clock::now();
+    auto report_total_time = [&] () {
+        auto clock_all_end = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> duration = clock_all_end - clock_all_begin;
+        std::cout << "Total time: " << duration.count() << "ms\n";
+    };
+
     int makespan;
     for(makespan = makespan_interval.first; makespan <= makespan_interval.second && !interrupted; ++makespan) {
-        std::cout << "Current makespan: " << makespan << '\n';
+        auto clock_begin = std::chrono::steady_clock::now();
+        auto report_time = [&] () {
+            auto clock_end = std::chrono::steady_clock::now();
+            std::chrono::duration<double, std::milli> duration = clock_end - clock_begin;
+            std::cout << "\tTook " << duration.count() << "ms\n";
+        };
 
+        std::cout << "Generating SAT problem with a bounded makespan of " << makespan << "...\n";
         if (!build_context(context, graph, agents, makespan, use_mdd)) {
+            report_time();
             continue;
         }
 
-        std::cout << "#Variables: " << context.variables_count() << '\n';
-        std::cout << "#Clauses: " << context.clauses_count() << '\n';
+        std::cout << "\t#Variables: " << context.variables_count() << '\n';
+        std::cout << "\t#Clauses: " << context.clauses_count() << '\n';
 
+        std::cout << "\tSolving...\n";
         if (interrupted || solve(context, res)) {
+            report_time();
             break;
         }
+
+            report_time();
+        std::cout << "\tFailed to solve.\n";
     }
 
     if (interrupted) {
+        std::cout << "\tFailed to solve.\n";
+        report_total_time();
         std::cout << "No solution found in time\n";
         return 1;
     }
 
     if (makespan > makespan_interval.second) {
-        std::cout << "No solution found\n";
+        std::cout << "\tFailed to solve.\n";
+        report_total_time();
+        std::cout << "No solution found within the bounds\n";
         return 1;
     }
 
-    std::cout << "Found a solution of makespan " << makespan << '\n';
+    std::cout << "\tSuccessfully solved\n";
+    report_total_time();
 
+    std::cout << "Path of all agents:\n";
     for(int a = 0; a < agents.size(); ++a) {
-        std::cout << "Agent #" << a << "'s path: ";
+        std::cout << "\tAgent #" << a << ": ";
         for(int t = 0; t <= makespan; ++t) {
             for(int v = 0; v < graph.size(); ++v) {
                 if (context.contains(t, a, v) && res[context.get_var(t, a, v).id]) {
