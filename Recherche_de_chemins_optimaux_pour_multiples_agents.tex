@@ -96,7 +96,8 @@
     \tableofcontents
 
     \newpage
-    \section{Introduction}
+    \section*{Introduction}
+    \addcontentsline{toc}{section}{Introduction}
 
     La recherche de chemin pour multiples agents ou recherche coopérative de chemin consiste à déplacer plusieurs agents sans que ceux-ci ne conflictent.
     Chaque agent démarre à une position et doit atteindre une autre position. 
@@ -480,7 +481,7 @@
     La contrainte sur l'unicité d'un agent par noeud par interval (\ref{equ:contrainteC}) ajoute $O(\tau \cdot |A| \cdot |V|^2)$ clauses.
     Et enfin, la contrainte qui impose aucun croisement (\ref{equ:contrainteD}) ajoute $O(\tau \cdot |A|^2 \cdot |V|)$ clauses.
     Une étude empirique de la taille de la formule généré ainsi que la comparaison avec et sans la reduction de l'espace de recherche est donné lors
-    de l'implémentation (\ref{sec:example}).
+    de l'implémentation (\ref{sec:compartaille}).
 
     \newpage
     \section{Implémentation}
@@ -541,13 +542,49 @@
 
 
     \subsection{Utilisation du programme}
+
+    Le solveur contient multiples arguments, tous décris avec l'option \lstinline{--help} comme présenté ci-dessous.
+    Le programme utilise le format CPF (\ref{sec:filecpf}) pour définir le problème CPF à résoudre. 
+    Une option importante est \lstinline{--no-mdd} pour désactiver l'optimisation de réduction de l'espace de recherche dans un but de 
+    comparaison. 
+    
+    \lstinputlisting[]{./usage/solver_help.txt}
+
     \subsection{Exemple d'exécution}
     \label{sec:example}
 
+    Les deux exemples d'exécution dans les sous-sections suivantes ont été établis sur le problème défini dans le fichier
+    \lstinline{impl/test/grid_test.cpf}\footnote{Voir annexe \nameref{anx:verifier}}. Celui-ci à été généré\footnote{Voir annexe \nameref{anx:generator}} à partir d'une grille de taille 10 par 10;
+    où chaque cellule à une probabilté de 10\% d'être un obstacle non traversable et 20\% d'être la cellule initiale d'un agent.
+    Les agents ont été assigné une destination aléatoire dans les cellules sans obsacles.
 
+    \subsubsection{Utilisation de la réduction de l'espace de recherche}
+
+    Résultat obtenus par l'appel au programme avec les options: \lstinline{./solver --output=result_with_mdd.res_cpf --input=test/grid_test.cpf}.
+    On peut remarquer que l'utilisation du MDD permet d'éliminer les itérations avec une durée non suffisante pour que tout les agents est  au moins un chemin.
+
+    \lstinputlisting[]{./usage/solver_with_mdd.txt}
+
+    \subsubsection{Désactivation de la réduction de l'espace de recherche}
+
+    Résultat obtenus par l'appel au programme avec les options: \lstinline{./solver --output=result_without_mdd.res_cpf --input=test/grid_test.cpf --no-mdd}.
+
+    \lstinputlisting[]{./usage/solver_without_mdd.txt}
+
+    \subsubsection{Comparaison de la taille de la formule avec et sans la réduction de l'espace de recherche}
+    \label{sec:compartaille}
+    
+    TODO: Inserer tableaux de comparatifs
+
+    L'utilisation d'un MDD améliore grandement l'éfficacité de l'algorithme en diminuant la taille de la formule par plusieurs
+    ordres de grandeurs. Même si, pour certains problèmes, lorsque la durée maximale permet à tout les agents d'atteindre tout les noeuds
+    du graphe, la taile de la formule est la même; le temps perdu à générer le MDD est en parti compensé par les itérations précédentes
+    prenant partie de cette optimisation. On peut aussi remarquer que la vérification que tout agent possède au minimum un chemin pour 
+    la durée demandé est un biproduit trivial lorsque le MDD est généré; éliminant totalement l'utilisation de solveur SAT pour cet itération. 
 
     \newpage
-    \section{Conclusion}
+    \section*{Conclusion}
+    \addcontentsline{toc}{section}{Conclusion}
 
     La formalisation d'un problème de recherche coopérative de chemins nous a permis une compréhension détaillé du problème.
     Compréhension qui a permis une conversion vers un problème de satisfiabilité sans souci. L'utilisation d'un graphe étendu dans
@@ -570,8 +607,12 @@
     \newpage
     \bibliography{biblio}
 
-    \section{Annexes}
-    \subsection{Utilisation du générateur de problème CPF}
-    \subsection{Utilisation du vérificateur/afficheur de solution}
+    \section*{Annexes}
+    \addcontentsline{toc}{section}{Annexes}
+
+    \subsection*{Utilisation du générateur de problème CPF}
+    \label{anx:generator}
+    \subsection*{Utilisation du vérificateur/afficheur de solution}
+    \label{anx:verifier}
 
 \end{document}
