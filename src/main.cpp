@@ -131,6 +131,7 @@ void print_help(char const* prog_name) {
     std::cerr << "\t--max-time=<value>     Maximum amount of seconds to solve the CPF\n";
     std::cerr << "\t--trust                Don't verify that a solution exists (This can be useful as the algorithm used for that is incomplete)\n";
     std::cerr << "\t--no-mdd               Don't reduce search space\n";
+    std::cerr << "\t--output=<file>        Write path of all agents to <file>, each line is a path, each path is a sequence of number representing nodes\n";
 }
 
 int get_max_cpu_from_args(CmdArgMap const& args) {
@@ -424,6 +425,29 @@ int main(int argc, char** argv)
             }
         }
         std::cout << '\n';
+    }
+
+    std::string output_file;
+    if (get_argument_as_string(args, "output", output_file)) {
+        std::ofstream file(output_file);
+        if (!file) {
+            std::cerr << "Couldn't open output file '" << output_file << "'\n";
+            return 1;
+        }
+        std::cout << "Writing to '" << output_file << "'... ";
+
+        for(int a = 0; a < agents.size(); ++a) {
+            for(int t = 0; t <= makespan; ++t) {
+                for(int v = 0; v < graph.size(); ++v) {
+                    if (context.contains(t, a, v) && res[context.get_var(t, a, v).id]) {
+                        file << v << ' ';
+                    }
+                }
+            }
+            file << '\n';
+        }
+
+        std::cout << "Done\n";
     }
 
     return 0;

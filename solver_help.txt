@@ -1,0 +1,9 @@
+Usage: ./solver <options> --input=<file>
+	--input=<file>         File in CPF format [REQUIRED]
+Options:
+	--min-makespan=<value> Minimum makespan researched
+	--max-makespan=<value> Maximum makespan researched
+	--max-time=<value>     Maximum amount of seconds to solve the CPF
+	--trust                Don't verify that a solution exists (This can be useful as the algorithm used for that is incomplete)
+	--no-mdd               Don't reduce search space
+	--output=<file>        Write path of all agents to <file>, each line is a path, each path is a sequence of number representing nodes

@@ -1,0 +1,52 @@
+Generating SAT problem with a bounded makespan of 0...
+	No path for agent 0 found in the MDD
+	Took 0.931496ms
+Generating SAT problem with a bounded makespan of 1...
+	No path for agent 0 found in the MDD
+	Took 1.94534ms
+Generating SAT problem with a bounded makespan of 2...
+	No path for agent 0 found in the MDD
+	Took 4.46273ms
+Generating SAT problem with a bounded makespan of 3...
+	No path for agent 0 found in the MDD
+	Took 10.5582ms
+Generating SAT problem with a bounded makespan of 4...
+	No path for agent 0 found in the MDD
+	Took 14.6095ms
+Generating SAT problem with a bounded makespan of 5...
+	No path for agent 0 found in the MDD
+	Took 23.7924ms
+Generating SAT problem with a bounded makespan of 6...
+	No path for agent 0 found in the MDD
+	Took 32.186ms
+Generating SAT problem with a bounded makespan of 7...
+	No path for agent 3 found in the MDD
+	Took 47.032ms
+Generating SAT problem with a bounded makespan of 8...
+	No path for agent 3 found in the MDD
+	Took 66.0722ms
+Generating SAT problem with a bounded makespan of 9...
+	No path for agent 3 found in the MDD
+	Took 93.3454ms
+Generating SAT problem with a bounded makespan of 10...
+	No path for agent 3 found in the MDD
+	Took 135.354ms
+Generating SAT problem with a bounded makespan of 11...
+	#Variables: 1102
+	#Clauses: 22176
+	Solving...
+	Took 1709.73ms
+	Successfully solved
+Total time: 2140.22ms
+Path of all agents:
+	Agent #0: #56, #66, #65, #64, #64, #74, #84, #83, #93, #93, #83, #82, 
+	Agent #1: #91, #81, #82, #83, #84, #85, #86, #85, #75, #85, #84, #74, 
+	Agent #2: #36, #26, #26, #16, #15, #14, #15, #16, #6, #7, #6, #5, 
+	Agent #3: #9, #19, #18, #17, #16, #26, #36, #35, #45, #44, #43, #42, 
+	Agent #4: #15, #14, #24, #34, #44, #54, #64, #65, #66, #67, #77, #78, 
+	Agent #5: #48, #38, #28, #18, #8, #7, #6, #5, #15, #5, #5, #4, 
+	Agent #6: #18, #17, #16, #15, #14, #24, #23, #22, #12, #11, #12, #22, 
+	Agent #7: #46, #56, #66, #76, #77, #78, #79, #69, #69, #69, #69, #79, 
+	Agent #8: #85, #86, #96, #97, #97, #97, #97, #96, #86, #76, #66, #76, 
+	Agent #9: #8, #9, #9, #19, #29, #28, #18, #17, #16, #15, #14, #24, 
+Writing to 'result_with_mdd_.res_cpf'... Done

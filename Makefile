@@ -76,7 +76,7 @@ header-of = $(1:%$(EXT_SRC_FILE)=%$(EXT_INC_FILE))
 # Relative to $(SRC_FOLDER)
 SRC_EXCLUDE_FILE := 
 # All files that are not use for libraries, don't add src/
-SRC_MAINS := main.cpp make_grid_main.cpp
+SRC_MAINS := main.cpp make_grid_main.cpp main_verifier.cpp
 # The main file to use (must be in $(SRC_MAINS))
 SRC_MAIN := main.cpp
 

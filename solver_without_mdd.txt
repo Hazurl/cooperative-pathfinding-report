@@ -1,0 +1,85 @@
+Generating SAT problem with a bounded makespan of 0...
+	#Variables: 1000
+	#Clauses: 110000
+	Solving...
+	Took 356.587ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 1...
+	#Variables: 2000
+	#Clauses: 239880
+	Solving...
+	Took 982.789ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 2...
+	#Variables: 3000
+	#Clauses: 369760
+	Solving...
+	Took 1834.17ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 3...
+	#Variables: 4000
+	#Clauses: 499640
+	Solving...
+	Took 2271.56ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 4...
+	#Variables: 5000
+	#Clauses: 629520
+	Solving...
+	Took 2869.91ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 5...
+	#Variables: 6000
+	#Clauses: 759400
+	Solving...
+	Took 3493.55ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 6...
+	#Variables: 7000
+	#Clauses: 889280
+	Solving...
+	Took 4032.81ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 7...
+	#Variables: 8000
+	#Clauses: 1019160
+	Solving...
+	Took 4874.62ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 8...
+	#Variables: 9000
+	#Clauses: 1149040
+	Solving...
+	Took 5628.24ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 9...
+	#Variables: 10000
+	#Clauses: 1278920
+	Solving...
+	Took 6395.6ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 10...
+	#Variables: 11000
+	#Clauses: 1408800
+	Solving...
+	Took 6791.73ms
+	Failed to solve.
+Generating SAT problem with a bounded makespan of 11...
+	#Variables: 12000
+	#Clauses: 1538680
+	Solving...
+	Took 8409.91ms
+	Successfully solved
+Total time: 47941.8ms
+Path of all agents:
+	Agent #0: #56, #66, #76, #75, #74, #73, #73, #83, #82, #81, #82, #82, 
+	Agent #1: #91, #81, #82, #83, #83, #82, #83, #84, #84, #94, #84, #74, 
+	Agent #2: #36, #26, #26, #16, #15, #14, #15, #16, #6, #16, #15, #5, 
+	Agent #3: #9, #8, #7, #6, #16, #26, #36, #35, #45, #44, #43, #42, 
+	Agent #4: #15, #14, #24, #34, #44, #54, #64, #65, #66, #67, #77, #78, 
+	Agent #5: #48, #48, #38, #28, #18, #8, #7, #6, #5, #5, #4, #4, 
+	Agent #6: #18, #17, #16, #15, #14, #24, #23, #22, #21, #11, #12, #22, 
+	Agent #7: #46, #56, #57, #67, #77, #78, #79, #69, #69, #69, #69, #79, 
+	Agent #8: #85, #86, #87, #97, #97, #97, #97, #96, #86, #76, #66, #76, 
+	Agent #9: #8, #7, #6, #5, #4, #3, #4, #14, #15, #15, #14, #24, 
+Writing to 'result_with_mdd_.res_cpf'... Done
