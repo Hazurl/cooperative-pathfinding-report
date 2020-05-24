@@ -1,6 +1,11 @@
 \documentclass[french, 12pt, letterpaper]{article}
+
 \usepackage[utf8]{inputenc}
+
+\usepackage[sfmath]{kpfonts} %% sfmath option only to make math in sans serif. Probablye only for use when base font is sans serif.
+\renewcommand*\familydefault{\sfdefault} %% Only if the base font of the document is to be sans serif
 \usepackage[T1]{fontenc}
+
 \usepackage{lmodern}
 
 \usepackage{xspace}
@@ -130,7 +135,7 @@
 
     \subsection{Modélisation formelle du problème}
 
-    Soit $G = \langle V, E \rangle$, un graphe non orienté modélisant l'environement avec $V = \{v_0, v_1, \dots, v_n\}$ un ensemble fini de noeuds et 
+    Soit $G = ( V, E )$, un graphe non orienté modélisant l'environement avec $V = \{v_0, v_1, \dots, v_n\}$ un ensemble fini de noeuds et 
     $E \subseteq \{\{v_i, v_j\}|v_i, v_j \in V\}$ un ensemble d'arêtes entre deux noeuds du graphe. 
     Ainsi que $A = \{a_1, a_2, \ldots, a_m\}$ un ensemble fini d'agents, $n \leq m$. 
     Le temps, comme décrit plus tôt, est divisé en intervals de temps discret $t$.
@@ -142,7 +147,7 @@
     Intuitivement, $\alpha^{-1}_t$ désigne l'agent occupant le noeud $v \in V$ à l'instant $t$, ou $\bot$ si le noeud est vide.
 
     \begin{definition}[Recherche coopérative de chemin]
-        Une instance d'un problème de recherche coopérative de chemin, ou CPF, sera déclarée comme le quadruplé $\Sigma = \langle G, A, \alpha_0, \alpha^+ \rangle$;
+        Une instance d'un problème de recherche coopérative de chemin, ou CPF, sera déclarée comme le quadruplé $\Sigma = ( G, A, \alpha_0, \alpha^+ )$;
         avec $\alpha_0$ et $\alpha^+$, la configuration de départ et, respectivement, de fin des agents.
         Une solution à cette instance est une séquence d'arrangements $[\alpha_0, \alpha_1, \ldots, \alpha_\tau]$ tel que $\alpha_\tau = \alpha^+$ 
         et $\alpha_{t+1}$ est une transition valide depuis $\alpha_t$ pour $t=0, 1, \ldots, \tau - 1$.
@@ -232,11 +237,11 @@
                     \STATE $F(\Sigma, \tau) \leftarrow \text{encode vers SAT}(\Sigma, \tau)$
                     \IF{$\text{resoud}(F(\Sigma, \tau))$}
                         \STATE $s \leftarrow \text{extrait solution}(F(\Sigma, \tau))$
-                        \RETURN $\langle s, \tau \rangle$ 
+                        \RETURN $( s, \tau )$ 
                     \ENDIF
                 \ENDLOOP
             \ELSE
-                \RETURN $\langle \emptyset, \infty \rangle$ 
+                \RETURN $( \emptyset, \infty )$ 
             \ENDIF
         \end{algorithmic}
     \end{algorithm}
@@ -250,13 +255,13 @@
     Ainsi à chaque agent pourra être attribué un chemin simple dans le graphe étendu.
 
     \begin{definition}[Expansion d'un graphe dans le temps $TEG^\tau(G)$]
-        Soit $G = \langle V, E \rangle$ un graphe non-orienté et $\tau\in \mathbb{N}$. 
+        Soit $G = ( V, E )$ un graphe non-orienté et $\tau\in \mathbb{N}$. 
         Une expansion dans le temps du graphe $G$ avec $\tau + 1$ couche de temps (indéxé de $0$ à $\tau$) est un graphe orienté
-        $TEG^\tau(G) = \langle V', E' \rangle$; avec:
+        $TEG^\tau(G) = ( V', E' )$; avec:
         \begin{align*}
             V' = &\{v^t\;|\;v \in V \land t = 0, 1, \ldots, \tau\}\\
-            E' = &\{\langle u^t, v^{t+1} \rangle, \langle v^t, u^{t+1} \rangle\;|\;\{u, v\}\in E \land t= 0, 1, \ldots, \tau - 1\} \cup\\
-            &\{\langle v^t, v^{t+1} \rangle\;|\;v\in V \land t= 0, 1, \ldots, \tau - 1\}.
+            E' = &\{( u^t, v^{t+1} ), ( v^t, u^{t+1} )\;|\;\{u, v\}\in E \land t= 0, 1, \ldots, \tau - 1\} \cup\\
+            &\{( v^t, v^{t+1} )\;|\;v\in V \land t= 0, 1, \ldots, \tau - 1\}.
         \end{align*} 
     \end{definition}
 
@@ -270,7 +275,7 @@
             \label{def:chemindisjoint}
             \begin{split}
             &V(\pi_i) \cap V(\pi_j) = \emptyset\\
-            \text{avec } &V(\pi) = \{v_i^t, v_j^r\;|\;\langle v_i^t, v_j^r \rangle \in \pi\} \subseteq V'\\
+            \text{avec } &V(\pi) = \{v_i^t, v_j^r\;|\;( v_i^t, v_j^r ) \in \pi\} \subseteq V'\\
             &\textbf{(Les noeuds parcourus annotés du temps)}
             \end{split}
         \end{gather}
@@ -278,42 +283,42 @@
             \label{def:chemincroisement}
             \begin{split}
             &TE(\pi_i) \cap TE(\pi_j) = \emptyset\\
-            \text{avec } &TE(\pi) = \{\{v_i, v_j\}^t_r  \;|\; \langle v_i^t, v_j^r \rangle \in \pi \}\\
+            \text{avec } &TE(\pi) = \{\{v_i, v_j\}^t_r  \;|\; ( v_i^t, v_j^r ) \in \pi \}\\
             &\textbf{(Les arêtes (non orientées) parcourus annotées du temps)}
             \end{split}
         \end{gather}
     \end{definition}
 
     \begin{proposition}
-        Une solution à un problème CPF $\Sigma = \langle G, A, \alpha_0, \alpha^+ \rangle$ avec $A = \{a_1, a_2, \ldots, a_m\}$ et de durée $\tau$,
+        Une solution à un problème CPF $\Sigma = ( G, A, \alpha_0, \alpha^+ )$ avec $A = \{a_1, a_2, \ldots, a_m\}$ et de durée $\tau$,
         existe si et seulement s'il existe un ensemble $\Pi = [\pi_0, \pi_1, \ldots, \pi_m]$ de chemins disjoints et sans croisement dans $TEG^\tau(G)$
         tel que $\pi_i$ connecte $\alpha_0(a_i)^0$ à $\alpha^+(a_i)^\tau$ pour $i = 1, 2, \ldots, m$.
     \end{proposition}
 
     \begin{proof}
-        Soit $\mathcal{S} = [\alpha_0, \alpha_1, \ldots, \alpha_\tau]$ une solution à un problème CPF $\Sigma = \langle G, A, \alpha_0, \alpha^+ \rangle$, avec
-        $A = \{a_1, a_2, \ldots, a_m\}$ et $G = \langle V, E \rangle$.
+        Soit $\mathcal{S} = [\alpha_0, \alpha_1, \ldots, \alpha_\tau]$ une solution à un problème CPF $\Sigma = ( G, A, \alpha_0, \alpha^+ )$, avec
+        $A = \{a_1, a_2, \ldots, a_m\}$ et $G = ( V, E )$.
         L'ensemble de chemins $\Pi = [\pi_0, \pi_1, \ldots, \pi_m]$ de $TEG^\tau(G)$ disjoints et sans croisement peut être construit à partir de $\mathcal{S}$.
         Le chemin $\pi_i$ désigne la trajectoire de l'agent $a_i \in A$, plus particulièrement, 
-        $\pi_i = [\langle \alpha_0(a_i)^0, \alpha_1(a_i)^1 \rangle, \langle \alpha_1(a_i)^1, \alpha_2(a_i)^2 \rangle,
-        \ldots\\, \langle \alpha_{\tau-1}(a_i)^{\tau-1}, \alpha_\tau(a_i)^\tau \rangle]$.
-        De plus, $\pi_i$ est un chemin de $TEG^\tau(G)$ car, étant donné que $\{\alpha_t(a_i),\\ \alpha_{t+1}(a_i)\} \in E$, 
-        $\langle \alpha_t(a_i)^t, \alpha_{t+1}(a_i)^{t+1} \rangle \in E'$ 
-        par construction de $TEG^\tau(G) = \langle V', E' \rangle$. 
+        $\pi_i = [( \alpha_0(a_i)^0, \alpha_1(a_i)^1 ), ( \alpha_1(a_i)^1, \alpha_2(a_i)^2 ),
+        \ldots, ( \alpha_{\tau-1}(a_i)^{\tau-1}, \alpha_\tau(a_i)^\tau )]$.
+        De plus, $\pi_i$ est un chemin de $TEG^\tau(G)$ car, étant donné que $\{\alpha_t(a_i), \alpha_{t+1}(a_i)\} \in E$, 
+        $( \alpha_t(a_i)^t, \alpha_{t+1}(a_i)^{t+1} ) \in E'$ 
+        par construction de $TEG^\tau(G) = ( V', E' )$. 
         Evidemment, $\pi_i$ connecte $\alpha_0(a_i)^0$ à $\alpha_\tau(a_i)^\tau$.
         Il ne reste alors plus qu'à vérifier que les chemins soient disjoints et sans croisement.
         On sait que $V(\pi_i) = \{\alpha_0(a_i)^0, \alpha_1(a_i)^1, \ldots, \alpha_\tau(a_i)^\tau\}$, or, un arrangement ne peut affecter deux agents
         sur un même noeud, par conséquent (\ref{def:chemindisjoint}) est respecté.
         Aucun croisement ne peut avoir lieu (\ref{def:chemincroisement}) car sinon la transition entre deux arrangements (\ref{def:croisement}) ne serait respectée.
 
-        Montrons maintenant qu'il est possible de construire une solution du problème $\Sigma = \langle G = \langle V, E \rangle, A, \alpha_0, \alpha^+ \rangle$ de durée $\tau$ 
+        Montrons maintenant qu'il est possible de construire une solution du problème $\Sigma = ( G = ( V, E ), A, \alpha_0, \alpha^+ )$ de durée $\tau$ 
         à partir d'un ensemble de chemins $\Pi = [\pi_0, \pi_1, \ldots, \pi_m]$ de $TEG^\tau(G)$ disjoints et sans croisement 
         où chaque chemin $\pi_i$ connecte $\alpha_0(a_i)$ à $\alpha_+(a_i)$. 
         Assumons l'existence d'un tel ensemble. 
-        On défini alors $\alpha_t(a_i) = v_l$ avec $\pi_i = [\langle v_0^0, v_1^1 \rangle, \langle v_1^1, v_2^2 \rangle, \ldots, 
-        \langle v_{p-1}^{tau-1}, v_p^\tau \rangle]$, $v_l \in V$, $l = 0, 1, \ldots, p$, $t = 0, 1, \ldots, \tau$.
+        On défini alors $\alpha_t(a_i) = v_l$ avec $\pi_i = [( v_0^0, v_1^1 ), ( v_1^1, v_2^2 ), \ldots, 
+        ( v_{p-1}^{tau-1}, v_p^\tau )]$, $v_l \in V$, $l = 0, 1, \ldots, p$, $t = 0, 1, \ldots, \tau$.
         Les chemins sont disjoints, donc les arrangements sont bien formés. 
-        De plus, par construction de $TEG^\tau(G) = \langle V', E' \rangle$, pour toute arête orientée $\langle v^t, u^{t+1} \rangle \in \pi_i$ 
+        De plus, par construction de $TEG^\tau(G) = ( V', E' )$, pour toute arête orientée $( v^t, u^{t+1} ) \in \pi_i$ 
         implique que $v = u$ ou $\{v, u\} \in E$ (\ref{def:deplacement}). 
         Enfin aucun chemin de $\Pi$ ne se croise (\ref{def:chemincroisement}), impliquant nécéssairement que toutes transitions entre deux arrangements
         soient valide (\ref{def:croisement}).
@@ -330,19 +335,19 @@
     Intuitivement, le MDD d'un agent est le graphe n'incluant que les noeuds auquels celui-ci peut accéder dans le temps imparti.
 
     \begin{definition}[Reduction de l'espace de recherche d'un agent $MDD_i^\tau$]
-        Soit le problème CPF suivant $\Sigma = \langle G, A, \alpha_0, \alpha^+ \rangle$ avec $G = \langle V, E \rangle$, $A = \{a_1, a_2, \ldots a_m\}$.
-        Lors de la recherche d'une solution de durée $\tau$, on notera $MDD_i^\tau \subseteq TEG^\tau = \langle V', E' \rangle$ l'environement de l'agent 
+        Soit le problème CPF $\Sigma = ( G, A, \alpha_0, \alpha^+ \rangle$ avec $G = \langle V, E )$, $A = \{a_1, a_2, \ldots a_m\}$.
+        Lors de la recherche d'une solution de durée $\tau$, on notera $MDD_i^\tau \subseteq TEG^\tau = ( V', E' )$ l'environement de l'agent 
         $a_i \in A$, $i = 1, 2, \dots, m$. Plus précisement, sachant que $\xi(v, u)$ est le coût de déplacement minimal entre deux noeuds $v, u \in V$, 
-        $MDD_i^\tau = \langle V^-, E^- \rangle$ avec:
+        $MDD_i^\tau = ( V^-, E^- )$ avec:
         \begin{align*}
             V^- =& \{v^t\;|\; \xi(\alpha_0(a_i), v) + \xi(v, \alpha^+(a_i)) \leq \tau, v^t \in V'\}\\
-            E^- =& \{\langle v, u \rangle \;|\; \langle v, u \rangle \in E' \land v, u \in V^-\}
+            E^- =& \{( v, u ) \;|\; ( v, u ) \in E' \land v, u \in V^-\}
         \end{align*} 
     \end{definition}
 
     \begin{proposition}
-        S'il existe une solution de durée $\tau$ pour un problème CPF $\Sigma = \langle G, A, \alpha_0, \alpha^+ \rangle$,
-        avec $G = \langle V, E \rangle$
+        S'il existe une solution de durée $\tau$ pour un problème CPF $\Sigma = ( G, A, \alpha_0, \alpha^+ )$,
+        avec $G = ( V, E )$
         et donc un ensemble de chemin dans $TEG^\tau(G)$ disjoints et sans croisement $\Pi = [\pi_0, \pi_1, \ldots, \pi_m]$ alors tout chemin
         $\pi_i \in \Pi$ est, de plus, dans $MDD^\tau_i$.
     \end{proposition}
@@ -364,8 +369,8 @@
 
     \begin{definition}[Encodage DIRECT $F(\Sigma, \tau)$]
         \label{def:encoding}
-        Soit $\Sigma=\langle G, A, \alpha_0, \alpha_+\rangle$ une instance d'un problème CPF avec $G = \langle V, E \rangle$ et $\tau\in \mathbb{N}$
-        la durée maximale, l'expansion de ce graphe, et sa réduction pour chaque agent $a_i \in A$ nous donne $MDD^\tau_i(G) = \langle V', E' \rangle$.
+        Soit $\Sigma=( G, A, \alpha_0, \alpha_+)$ une instance d'un problème CPF avec $G = ( V, E )$ et $\tau\in \mathbb{N}$
+        la durée maximale, l'expansion de ce graphe, et sa réduction pour chaque agent $a_i \in A$ nous donne $MDD^\tau_i(G) = ( V', E' )$.
         Pour encoder ce problème, on défini les variables $\chi_{a, v}^t$ comme représentant la présence de l'agent $a\in A$ sur le noeud $v^t \in V'$.
         Les contraintes suivantes assurent la validité du modèle défini:
         
@@ -373,7 +378,7 @@
             \item[] 
                 \begin{gather}
                     \begin{split}
-                        \chi_{a, v}^t \implies \bigvee_{u\;|\;\langle v^t, u^{t+1} \rangle \in E'} \chi_{a, u}^{t+1}
+                        \chi_{a, v}^t \implies \bigvee_{u\;|\;( v^t, u^{t+1} ) \in E'} \chi_{a, u}^{t+1}
                         \\\forall a \in A, \forall v \in V, \forall t \in \{0, 1, \ldots, \tau-1\}
                     \end{split}
                 \end{gather}
@@ -429,8 +434,8 @@
             \begin{align}
                 \label{equ:contrainteA}
                 \begin{split}
-                    &\chi_{a, v}^t \implies \bigvee_{u\;|\;\langle v^t, u^{t+1} \rangle \in E'} \chi_{a, u}^{t+1}
-                    \\&\iff \lnot \chi_{a, v}^t \lor \bigvee_{u\;|\;\langle v^t, u^{t+1} \rangle \in E'} \chi_{a, u}^{t+1}
+                    &\chi_{a, v}^t \implies \bigvee_{u\;|\;( v^t, u^{t+1} ) \in E'} \chi_{a, u}^{t+1}
+                    \\&\iff \lnot \chi_{a, v}^t \lor \bigvee_{u\;|\;( v^t, u^{t+1} ) \in E'} \chi_{a, u}^{t+1}
                     \\&\forall a \in A, \forall v \in V, \forall t \in \{0, 1, \ldots, \tau-1\}
                 \end{split}
             \end{align}
@@ -474,7 +479,7 @@
     des solveurs SAT est primordial. L'un des facteurs les plus importants est la taille de la formule, le nombre de clauses et de variables doit être minimal.
     Même si ce travail n'a pas pour but de comparer d'autres modélisations existantes, il reste important de calculer la taille de la formule générée.
 
-    Pour une formule $F(\Sigma, \tau)$ d'une instance $\Sigma=\langle G, A, \alpha_0, \alpha_+\rangle$ sur le graphe $G = \langle V, E \rangle$, 
+    Pour une formule $F(\Sigma, \tau)$ d'une instance $\Sigma=( G, A, \alpha_0, \alpha_+)$ sur le graphe $G = ( V, E )$, 
     le nombre de variables est simple à calculer: $O(\tau \cdot |A| \cdot |V|)$. 
     Le nombre de clauses est égale à la somme du nombre de clauses ajouté par chaque type de contrainte.
     La contrainte de déplacement sur une arête (\ref{equ:contrainteA}) ajoute $O(\tau \cdot |A| \cdot |V|)$ clauses.
