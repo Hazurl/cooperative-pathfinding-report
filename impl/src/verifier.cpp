@@ -27,6 +27,14 @@ std::vector<std::vector<cpf::node_t>> parse_path(std::istream& is) {
     return all_path;
 }
 
+void print_help(char const* prog_name) {
+    std::cerr << "Usage: " << prog_name << " <options> --graph=<file.cpf> --result=<file.res_cpf>\n";
+    std::cerr << "\t--graph=<file>   File in CPF format describing the graph and the agents [REQUIRED]\n";
+    std::cerr << "\t--result=<file>  File outputted by the solver when solving the problem in --graph [REQUIRED]\n";
+    std::cerr << "Options:\n";
+    std::cerr << "\t--show-as-grid   Print the successives time steps, the graph *must be* a squared grid, like the problems produced by the generator\n";
+}
+
 int main(int argc, char** argv) {
     auto args = cpf::parse_args(argc, argv);
 
@@ -35,11 +43,13 @@ int main(int argc, char** argv) {
 
     if (!cpf::get_argument_as_string(args, "graph", graph_filename)) {
         std::cerr << "Parameter --graph required\n";
+        print_help(argv[0]);
         return 1;
     }
 
     if (!cpf::get_argument_as_string(args, "result", path_filename)) {
         std::cerr << "Parameter --result required\n";
+        print_help(argv[0]);
         return 1;
     }
 
@@ -95,9 +105,16 @@ int main(int argc, char** argv) {
 
     std::cout << "Verification done\n";
 
+    if (!cpf::has_argument(args, "show-as-grid")) {
+        return 0;
+    }
+
+    std::cout << "Showing time steps:\n";
+
     auto size = std::sqrt(graph.size());
     std::size_t max_time = all_path.empty() ? 0 : all_path[0].size();
     for(std::size_t t = 0; t < max_time; ++t) {
+        std::cout << "\tt=" << t << '\n';
         for(std::size_t x = 0; x < size; ++x) {
             for(std::size_t y = 0; y < size; ++y) {
                 auto node = x + y * size;
@@ -121,8 +138,6 @@ int main(int argc, char** argv) {
             }
             std::cout << '\n';
         }
-
-        std::cin.get();
         std::cout << '\n';
     }
 
