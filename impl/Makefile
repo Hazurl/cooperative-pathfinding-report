@@ -33,25 +33,14 @@ GLUCOSE_FOLDER := $(LIB_FOLDER)/glucose-syrup-4.1
 
 BUILD_FOLDER := build
 
-BUILD_SHARED_FOLDER := $(BUILD_FOLDER)/shared
-BUILD_STATIC_FOLDER := $(BUILD_FOLDER)/static
-BUILD_EXE_FOLDER := $(BUILD_FOLDER)/executable
+BUILD_EXE_FOLDER := $(BUILD_FOLDER)
 
 #####
 ##### GENERAL SETTINGS
 #####
 
-PROJECT_NAME := cpf
 CXX := g++
 SXX := ar
-
-# Targets
-TARGET_SHARED := $(BUILD_SHARED_FOLDER)/lib$(PROJECT_NAME).so
-TARGET_STATIC := $(BUILD_STATIC_FOLDER)/lib$(PROJECT_NAME).a
-TARGET_EXE := $(BUILD_EXE_FOLDER)/$(PROJECT_NAME)
-
-# Target to build when `make` or `make all` is typed
-TARGET_ALL := $(TARGET_EXE)
 
 #####
 ##### FILES SETTINGS
@@ -75,22 +64,25 @@ header-of = $(1:%$(EXT_SRC_FILE)=%$(EXT_INC_FILE))
 
 # Relative to $(SRC_FOLDER)
 SRC_EXCLUDE_FILE := 
-# All files that are not use for libraries, don't add src/
-SRC_MAINS := main.cpp make_grid_main.cpp main_verifier.cpp
-# The main file to use (must be in $(SRC_MAINS))
-SRC_MAIN := main.cpp
+
+SRC_MAIN_SOLVER := solver.cpp
+SRC_MAIN_GENERATOR := generator.cpp
+SRC_MAIN_VERIFIER := verifier.cpp
+SRC_MAINS := $(SRC_MAIN_SOLVER) $(SRC_MAIN_GENERATOR) $(SRC_MAIN_VERIFIER)
+
+# Targets
+TARGET_SOLVER := $(BUILD_EXE_FOLDER)/solver
+TARGET_GENERATOR := $(BUILD_EXE_FOLDER)/generator
+TARGET_VERIFIER := $(BUILD_EXE_FOLDER)/verifier
 
 #####
 ##### FLAGS
 #####
 
-OPTI := -g2
-FLAGS := -std=c++11  $(OPTI) -pthread -rdynamic
+OPTI := -O3
+FLAGS := -std=c++11  $(OPTI) -pthread
 FLAGS += -Wall -Wextra -Wno-pmf-conversions -Wshadow -Wpedantic -Wduplicated-cond -Wduplicated-branches -Wlogical-op 
 FLAGS += -Wnull-dereference -Wuseless-cast -Wold-style-cast -Wcast-align -Wcast-qual -Wno-missing-field-initializers 
-FLAGS += -fsanitize=address -fsanitize=pointer-subtract -fsanitize=pointer-compare -fsanitize=leak -fsanitize=undefined -fuse-ld=gold
-FLAGS += -fsanitize-address-use-after-scope
-STATIC_LINK_FLAG := rcs
 
 # Include path
 # Must be use with -I
@@ -203,21 +195,17 @@ _SRC_DIR := $(sort $(dir $(_SRC_FILES)))
 _SRC_DIR_MAINS := $(sort $(dir $(_SRC_MAINS)))
 
 _EXE_DIR := $(addprefix $(BUILD_EXE_FOLDER)/,$(_SRC_DIR) $(_SRC_DIR_MAINS))
-_SHARED_DIR := $(addprefix $(BUILD_SHARED_FOLDER)/,$(_SRC_DIR) $(_SRC_DIR_MAINS))
-_STATIC_DIR := $(addprefix $(BUILD_STATIC_FOLDER)/,$(_SRC_DIR) $(_SRC_DIR_MAINS))
 
-_BUILD_DIR := $(_EXE_DIR) $(_SHARED_DIR) $(_STATIC_DIR)
+_BUILD_DIR := $(_EXE_DIR)
 
 #####
 ##### OBJECT FILES
 ##### 
 
-_OBJ_MAIN := $(SRC_MAIN:%$(EXT_SRC_FILE)=$(BUILD_EXE_FOLDER)/$(SRC_FOLDER)/%.o)
-_OBJ_SRC_EXE := $(_OBJ_MAIN) $(_SRC_FILES:%$(EXT_SRC_FILE)=$(BUILD_EXE_FOLDER)/%.o) 
-
-_OBJ_SRC_SHARED := $(_SRC_FILES:%$(EXT_SRC_FILE)=$(BUILD_SHARED_FOLDER)/%.o)
-
-_OBJ_SRC_STATIC := $(_SRC_FILES:%$(EXT_SRC_FILE)=$(BUILD_STATIC_FOLDER)/%.o)
+_OBJ_MAIN_SOLVER := $(SRC_MAIN_SOLVER:%$(EXT_SRC_FILE)=$(BUILD_EXE_FOLDER)/$(SRC_FOLDER)/%.o)
+_OBJ_MAIN_GENERATOR := $(SRC_MAIN_GENERATOR:%$(EXT_SRC_FILE)=$(BUILD_EXE_FOLDER)/$(SRC_FOLDER)/%.o)
+_OBJ_MAIN_VERIFIER := $(SRC_MAIN_VERIFIER:%$(EXT_SRC_FILE)=$(BUILD_EXE_FOLDER)/$(SRC_FOLDER)/%.o)
+_OBJ_SRC_EXE := $(_SRC_FILES:%$(EXT_SRC_FILE)=$(BUILD_EXE_FOLDER)/%.o) 
 
 _LIB_PATH_LD := $(call _join,:,$(strip $(filter-out -L,$(LIBS_PATH))))
 export LD_LIBRARY_PATH += $(_LIB_PATH_LD)
@@ -226,107 +214,25 @@ export LD_LIBRARY_PATH += $(_LIB_PATH_LD)
 ##### RULES
 #####
 
-.PHONY: all executable shared static 
-.PHONY: clean clean-executable clean-shared clean-static
-.PHONY: re re-executable re-shared re-static
-.PHONY: re-run run
-.PHONY: checks format
+.PHONY: all executable 
+.PHONY: clean  
+.PHONY: re 
+.PHONY: format
 
 .DEFAULT_GOAL := all
 
 all:
-ifneq ($(findstring $(TARGET_EXE),$(TARGET_ALL)),)
-	@make executable
-endif
-ifneq ($(findstring $(TARGET_SHARED),$(TARGET_ALL)),)
-	@make shared
-endif
-ifneq ($(findstring $(TARGET_STATIC),$(TARGET_ALL)),)
-	@make static
-endif
-
-executable:
 	@$(call _header,BUILDING EXECUTABLE...)
-	@make $(TARGET_EXE)
+	@make $(TARGET_SOLVER) $(TARGET_GENERATOR) $(TARGET_VERIFIER)
 
-shared:
-	@$(call _header,BUILDING SHARED LIBRARY...)
-	@make $(TARGET_SHARED)
-
-static:
-	@$(call _header,BUILDING STATIC LIBRARY...)
-	@make $(TARGET_STATIC)
 
 clean:
 	@$(call _header,REMOVING $(BUILD_FOLDER))
 	@$(call _remove-folder,$(BUILD_FOLDER))
 
-clean-executable:
-	@$(call _header,REMOVING $(BUILD_EXE_FOLDER))
-	@$(call _remove-folder,$(BUILD_EXE_FOLDER))
-
-clean-shared:
-	@$(call _header,REMOVING $(BUILD_SHARED_FOLDER))
-	@$(call _remove-folder,$(BUILD_SHARED_FOLDER))
-
-clean-static:
-	@$(call _header,REMOVING $(BUILD_STATIC_FOLDER))
-	@$(call _remove-folder,$(BUILD_STATIC_FOLDER))
-
-where-executable:
-	@echo $(TARGET_EXE)
-
-where-shared:
-	@echo $(TARGET_SHARED)
-
-where-static:
-	@echo $(TARGET_STATIC)
-
 re:
 	@make clean
 	@make
-
-re-executable:
-	@make clean-executable
-	@make executable
-
-re-shared:
-	@make clean-shared
-	@make shared
-
-re-static:
-	@make clean-static
-	@make static
-
-run:
-	@make executable
-	@echo
-	@$(call _special,EXECUTING $(TARGET_EXE)...)
-	@$(TARGET_EXE) $(args); ERR=$$?; $(call _special,PROGRAM HALT WITH CODE $$ERR); exit $$ERR;
-
-re-run:
-	@make re-executable
-	@make run
-
-valgrind:
-	@make executable
-	@echo
-	@$(call _special,EXECUTING $(TARGET_EXE) WITH VALGRIND...)
-	@valgrind $(TARGET_EXE) $(args); ERR=$$?; $(call _special,PROGRAM HALT WITH CODE $$ERR); exit $$ERR;
-
-re-valgrind:
-	@make re-executable
-	@make valgrind
-
-checks:
-	@$(call _special,RUNNING CPP-CHECK)
-	@cppcheck -j 4 --inconclusive --enable=all -I include src 2>&1 /dev/null | \
-	 sed   "s/^.*style.*)/\o033[36m&\o033[0m/g;\
-		 	s/^.*note.*)/\o033[36m&\o033[0m/g;\
-		 	s/^.*performance.*)/\o033[35m&\o033[0m/g;\
-		 	s/^.*error.*)/\o033[31m&\o033[0m/g;\
-		 	s/^.*warning.*)/\o033[33m&\o033[0m/g;\
-		 	s/^[0-9].*/\o033[1m&\o033[0m/g"
 
 format: .clang-format
 	@$(call _special,RUNNING CLANG-FORMAT)
@@ -338,40 +244,25 @@ $(_BUILD_DIR):
 ###
 
 
-$(TARGET_STATIC): $(_BUILD_DIR) $(LIB_TO_BUILD) $(_OBJ_SRC_STATIC)
-	@$(call _sub-header,Archiving...)
-	@$(SXX) $(STATIC_LINK_FLAG) $(TARGET_STATIC) $(_OBJ_SRC_STATIC)
-	@$(call _header,Static library done ($(TARGET_STATIC)))
-
-$(BUILD_STATIC_FOLDER)/$(SRC_FOLDER)/%.o: $(SRC_FOLDER)/%$(EXT_SRC_FILE) $(INC_FOLDER)/$(call header-of,%$(EXT_SRC_FILE))
-	@$(call _build-msg,$(notdir $@),$(call _join,$(_comma)$(_space),$(strip $(notdir $< $(wildcard $(word 2,$^))))))
-	@$(CXX) -c $(INC_FLAG) $(FLAGS) -o "$@" "$<"
-
-
-###
-
-
-$(TARGET_SHARED): $(_BUILD_DIR) $(LIB_TO_BUILD) $(_OBJ_SRC_SHARED)
-	@$(call _sub-header,Shared library creation...)
-	@$(CXX) $(INC_FLAG) $(FLAGS) -shared -o $(TARGET_SHARED) $(_OBJ_SRC_SHARED) $(LIBS_PATH) $(LIBS)
-	@$(call _header,Shared library done ($(TARGET_SHARED)))
-
-$(BUILD_SHARED_FOLDER)/$(SRC_FOLDER)/%.o: $(SRC_FOLDER)/%$(EXT_SRC_FILE) $(INC_FOLDER)/$(call header-of,%$(EXT_SRC_FILE))
-	@$(call _build-msg,$(notdir $@),$(call _join,$(_comma)$(_space),$(strip $(notdir $< $(wildcard $(word 2,$^))))))
-	@$(CXX) -c $(INC_FLAG) $(FLAGS) $(SHARED_FLAGS) -o "$@" "$<"
-
-
-###
-
-
-$(TARGET_EXE): $(_BUILD_DIR) $(LIB_TO_BUILD) $(_OBJ_SRC_EXE)
+$(TARGET_SOLVER): $(_BUILD_DIR) $(LIB_TO_BUILD) $(_OBJ_SRC_EXE) $(_OBJ_MAIN_SOLVER)
 	@$(call _sub-header,Linking...)
-	@$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
-	@$(call _header,Executable done ($(TARGET_EXE)))
+	$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_MAIN_SOLVER) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
+	@$(call _header,Executable done ($(TARGET_SOLVER)))
+
+$(TARGET_GENERATOR): $(_BUILD_DIR) $(LIB_TO_BUILD) $(_OBJ_SRC_EXE) $(_OBJ_MAIN_GENERATOR)
+	@$(call _sub-header,Linking...)
+	$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_MAIN_GENERATOR) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
+	@$(call _header,Executable done ($(TARGET_GENERATOR)))
+
+$(TARGET_VERIFIER): $(_BUILD_DIR) $(LIB_TO_BUILD) $(_OBJ_SRC_EXE) $(_OBJ_MAIN_VERIFIER)
+	@$(call _sub-header,Linking...)
+	$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_MAIN_VERIFIER) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
+	@$(call _header,Executable done ($(TARGET_VERIFIER)))
+
 
 $(BUILD_EXE_FOLDER)/$(SRC_FOLDER)/%.o: $(SRC_FOLDER)/%$(EXT_SRC_FILE) $(INC_FOLDER)/$(call header-of,%$(EXT_SRC_FILE))
 	@$(call _build-msg,$(notdir $@),$(call _join,$(_comma)$(_space),$(strip $(notdir $< $(wildcard $(word 2,$^))))))
-	@$(CXX) -c $(INC_FLAG) $(FLAGS) -o "$@" "$<"
+	$(CXX) -c $(INC_FLAG) $(FLAGS) -o "$@" "$<"
 
 
 # Just to avoid file without headers
