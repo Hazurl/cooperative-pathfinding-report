@@ -173,24 +173,21 @@ bool build_context(
 	cpf::Graph const& graph,
 	std::vector<cpf::Agent> const& agents,
 	std::size_t makespan,
-	bool use_mdd) {
+	std::vector<cpf::MDD>* mdds) {
 	context = cpf::Context(makespan, agents.size(), graph.size());
 
-	// Create the context, and fill it with the clauses
-
-	std::vector<cpf::MDD> mdds;
-	if (use_mdd) {
-		mdds.reserve(agents.size());
-		for (auto const& agent : agents) { mdds.emplace_back(graph, agent); }
-
-		for (auto& mdd : mdds) { mdd.step_until(makespan); }
+	// Construct the mdds
+	if (mdds) {
+		for (auto& mdd : *mdds) { mdd.step_until(makespan); }
 	}
+
+	// Create the context, and fill it with the clauses
 
 	for (std::size_t a = 0; a < agents.size(); ++a) {
 		bool has_variable = false;
 		for (std::size_t t = 0; t <= makespan; ++t) {
 			for (std::size_t v = 0; v < graph.size(); ++v) {
-				if (!use_mdd || mdds[a].accessible(v, t, makespan)) {
+				if (!mdds || (*mdds)[a].accessible(v, t, makespan)) {
 					context.create_var(t, a, v);
 					has_variable = true;
 				}
@@ -374,6 +371,13 @@ int main(int argc, char** argv) {
 	cpf::Context context;
 	std::vector<bool> res;
 
+	// Create the mdds
+	std::vector<cpf::MDD> mdds;
+	if (use_mdd) {
+		mdds.reserve(agents.size());
+		for (auto const& agent : agents) { mdds.emplace_back(graph, agent); }
+	}
+
 	auto clock_all_begin   = std::chrono::steady_clock::now();
 	auto report_total_time = [&]() {
 		auto clock_all_end								   = std::chrono::steady_clock::now();
@@ -393,7 +397,7 @@ int main(int argc, char** argv) {
 		};
 
 		std::cout << "Generating SAT problem with a bounded makespan of " << makespan << "...\n";
-		if (!build_context(context, graph, agents, makespan, use_mdd)) {
+		if (!build_context(context, graph, agents, makespan, use_mdd ? &mdds : nullptr)) {
 			report_time();
 			continue;
 		}
