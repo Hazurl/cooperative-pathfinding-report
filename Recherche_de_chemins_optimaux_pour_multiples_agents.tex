@@ -224,7 +224,7 @@
     et résoudre la formule $F(\Sigma, \tau)$ pour $\tau = 0, 1, \ldots$ jusqu'à ce que $F(\Sigma, \tau)$ soit satisfiable 
     (Pseudo-code de la stratégie est décrit dans \ref{alg:par}).
     Il est à noter que cette méthode ne termine jamais s'il n'existe pas de solution à $\Sigma$. Pour éviter ce cas, il est possible 
-    d'utiliser un algorithme polynomial tel que PUSH-AND-ROTATE \cite{WILDEPAR} (\ref{sec:par}) vérifiant l'existence d'une solution.
+    d'utiliser un algorithme polynomial tel que PUSH-AND-SPIN \cite{PAS} (\ref{sec:par}) vérifiant l'existence d'une solution.
 
     \begin{algorithm}
         \caption{Trouve sequentiellement la solution avec la plus petite durée qui résout $\Sigma$. 
@@ -528,14 +528,9 @@
     \label{sec:par}
 
     Pour déterminer si un problème CPF a une solution, la méthode de recherche itérative (\ref{sec:methiter}) ne fonctionne pas;
-    car dans le cas ou aucune solution n'existe, cette méthode ne termine jamais.
-    Pour compenser ce défaut, un algorithme supplémentaire est ajouté en début de programme.
-    Cet algorithme est appelé PUSH-AND-ROTATE \cite{WILDEPAR}. 
-    Cependant, son implémentation s'est heurtée à plusieurs difficultés. 
-    Premièrement, il n'est pas complet, et ensuite, ne correspond pas totalement aux prémisses établies, en particulier 
-    qu'un agent puisse se déplacer vers un noeud non vide.
-    L'imcomplétude de l'algorithme est résolue par la possibilité de désactiver cette vérification et d'ajouter une borne 
-    supérieure à la durée de la solution.
+    dans le cas où aucune solution n'existe, cette méthode ne termine jamais.
+    Pour compenser ce défaut, un algorithme supplémentaire tel que PUSH-AND-SPIN \cite{PAS} peut-être ajouté en début de programme.
+    Cependant, son implémentation s'est montré trop complexe pour être dans la version finale du programme. 
 
     \subsection{Utilisation du solveur SAT \emph{Glucose}}
     \label{sec:satsolver}
@@ -619,7 +614,7 @@
     méthodes \cite{PSUR16}, mais aussi une implémentation rapide et sans encombre. On a aussi remarqué que la réduction de l'espace
     de recherche par un MDD a contribué significativement à l'efficacité du programme.
 
-    Finalement, peu de problèmes se sont imposés. Cependant, par manque de temps, l'algorithme PUSH-AND-SPIN n'a pas pu faire partie de
+    Finalement, peu de problèmes se sont imposés. Cependant, par manque de temps, l'algorithme PUSH-AND-SPIN \cite{PAS} n'a pas pu faire partie de
     l'implémentation finale. Même s'il n'est pas le point central du sujet, son ajout aurait sans aucun doute rendu ce programme
     plus simple d'utilisation.
 
