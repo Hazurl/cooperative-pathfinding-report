@@ -1,16 +1,8 @@
-#pragma once
+#include <cpf/CmdArg.hpp>
 
-#include <string>
-#include <map>
+namespace cpf {
 
-struct CmdArg {
-    std::string name;
-    std::string value;
-};
-
-using CmdArgMap = std::map<std::string, std::string>;
-
-inline CmdArg parse_single_arg(std::string const& arg) {
+CmdArg parse_single_arg(std::string const& arg) {
     if (arg.empty()) {
         return {};
     }
@@ -24,7 +16,7 @@ inline CmdArg parse_single_arg(std::string const& arg) {
     };
 }
 
-inline CmdArgMap parse_args(int argc, char const* const* argv) {
+CmdArgMap parse_args(int argc, char const* const* argv) {
     CmdArgMap cmd_args;
     for(int i = 1; i < argc; ++i) {
         auto cmd_arg = parse_single_arg(argv[i]);
@@ -38,7 +30,7 @@ inline CmdArgMap parse_args(int argc, char const* const* argv) {
     return cmd_args;
 }
 
-inline bool get_argument_as_string(CmdArgMap const& args, std::string const& name, std::string& out) {
+bool get_argument_as_string(CmdArgMap const& args, std::string const& name, std::string& out) {
     auto it = args.find(name);
     if (it != std::end(args)) {
         out = it->second;
@@ -48,12 +40,12 @@ inline bool get_argument_as_string(CmdArgMap const& args, std::string const& nam
     return false;
 }
 
-inline bool has_argument(CmdArgMap const& args, std::string const& name) {
+bool has_argument(CmdArgMap const& args, std::string const& name) {
     auto it = args.find(name);
     return it != std::end(args);
 }
 
-inline bool get_argument_as_long(CmdArgMap const& args, std::string const& name, long& out) {
+bool get_argument_as_long(CmdArgMap const& args, std::string const& name, long& out) {
     auto it = args.find(name);
     if (it != std::end(args)) {
         out = std::stol(it->second);
@@ -61,4 +53,8 @@ inline bool get_argument_as_long(CmdArgMap const& args, std::string const& name,
     }
 
     return false;
+}
+
+
+
 }

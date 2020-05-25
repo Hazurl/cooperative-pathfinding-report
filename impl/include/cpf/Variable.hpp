@@ -1,9 +1,14 @@
 #pragma once
 
+namespace cpf {
+
+
+constexpr int INVALID_VARIABLE_ID = -1;
+
 class Variable {
 public:
 
-    constexpr Variable(int id, bool negated = false) noexcept : id{ id }, negated{ negated } {}
+    constexpr Variable(int id_, bool negated_ = false) noexcept : id{ id_ }, negated{ negated_ } {}
 
     constexpr Variable operator!() const noexcept {
         return Variable(id, !negated);
@@ -13,3 +18,5 @@ public:
     bool negated;
 
 };
+
+}

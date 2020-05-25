@@ -7,13 +7,13 @@
 #include <random>
 #include <unordered_map>
 
-#include <Clause.hpp>
-#include <Variable.hpp>
-#include <Context.hpp>
-#include <Graph.hpp>
-#include <Agent.hpp>
-#include <FileSerializer.hpp>
-#include <CmdArg.hpp>
+#include <cpf/Clause.hpp>
+#include <cpf/Variable.hpp>
+#include <cpf/Context.hpp>
+#include <cpf/Graph.hpp>
+#include <cpf/Agent.hpp>
+#include <cpf/FileSerializer.hpp>
+#include <cpf/CmdArg.hpp>
 
 void print_help(char const* prog_name) {
     std::cerr << "Usage: " << prog_name << " <options>\n";
@@ -25,27 +25,27 @@ void print_help(char const* prog_name) {
     std::cerr << "\t--display=<file> Display the grid in the file, no value will write to standard output stream\n";
 }
 
-int get_size(CmdArgMap const& args) {
+int get_size(cpf::CmdArgMap const& args) {
     long o;
-    if (get_argument_as_long(args, "size", o)) {
+    if (cpf::get_argument_as_long(args, "size", o)) {
         return static_cast<int>(o);
     } else {
         return 4;
     }
 }
 
-int get_wall_percent(CmdArgMap const& args) {
+int get_wall_percent(cpf::CmdArgMap const& args) {
     long o;
-    if (get_argument_as_long(args, "wall%", o)) {
+    if (cpf::get_argument_as_long(args, "wall%", o)) {
         return static_cast<int>(o);
     } else {
         return 20;
     }
 }
 
-int get_agent_percent(CmdArgMap const& args) {
+int get_agent_percent(cpf::CmdArgMap const& args) {
     long o;
-    if (get_argument_as_long(args, "agent%", o)) {
+    if (cpf::get_argument_as_long(args, "agent%", o)) {
         return static_cast<int>(o);
     } else {
         return 10;
@@ -55,8 +55,8 @@ int get_agent_percent(CmdArgMap const& args) {
 
 int main(int argc, char** argv)
 {
-    auto args = parse_args(argc, argv);
-    if (has_argument(args, "help") || has_argument(args, "h")) {
+    auto args = cpf::parse_args(argc, argv);
+    if (cpf::has_argument(args, "help") || cpf::has_argument(args, "h")) {
         print_help(argv[0]);
         return 0;
     }
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 
     std::ostream* output_stream;
 
-    if (get_argument_as_string(args, "output", output_filename)) {
+    if (cpf::get_argument_as_string(args, "output", output_filename)) {
         ofile.open(output_filename);
         if (!ofile) {
             std::cerr << "Unable to read file '" << output_filename << "'\n";
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
     std::ostream* display_stream = nullptr;
 
-    if (get_argument_as_string(args, "display", display_filename)) {
+    if (cpf::get_argument_as_string(args, "display", display_filename)) {
         if (display_filename.empty()) {
             display_stream = &std::cout;
         } else {
@@ -129,32 +129,32 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    std::vector<bool> is_wall(nodes_count);
-    std::vector<Agent> agents(agent_count);
-    Graph graph(nodes_count);
+    std::vector<bool> is_wall(static_cast<std::size_t>(nodes_count));
+    std::vector<cpf::Agent> agents(static_cast<std::size_t>(agent_count));
+    cpf::Graph graph(static_cast<std::size_t>(nodes_count));
 
     {
         std::mt19937 eng(std::random_device{}());
-        std::vector<std::size_t> nodes_id(nodes_count);
+        std::vector<std::size_t> nodes_id(static_cast<std::size_t>(nodes_count));
         std::iota(std::begin(nodes_id), std::end(nodes_id), std::size_t{ 0 });
         std::shuffle(std::begin(nodes_id), std::end(nodes_id), eng);
-        for(std::size_t i = 0; i < wall_count; ++i) {
+        for(std::size_t i = 0; i < static_cast<std::size_t>(wall_count); ++i) {
             is_wall[nodes_id[i]] = true;
         }
 
-        for(std::size_t i = 0; i < agent_count; ++i) {
+        for(std::size_t i = 0; i < static_cast<std::size_t>(agent_count); ++i) {
             agents[i].initial = nodes_id[wall_count + i];
         }
 
         std::shuffle(std::begin(nodes_id) + wall_count, std::end(nodes_id), eng);
 
-        for(std::size_t i = 0; i < agent_count; ++i) {
+        for(std::size_t i = 0; i < static_cast<std::size_t>(agent_count); ++i) {
             agents[i].goal = nodes_id[wall_count + i];
         }
     }
 
-    for(std::size_t x = 0; x < size; ++x) {
-        for(std::size_t y = 0; y < size; ++y) {
+    for(std::size_t x = 0; x < static_cast<std::size_t>(size); ++x) {
+        for(std::size_t y = 0; y < static_cast<std::size_t>(size); ++y) {
             auto node = x + y * size;
 
             if (is_wall[node]) {
@@ -168,7 +168,7 @@ int main(int argc, char** argv)
                 }
             }
 
-            if (y < size - 1) {
+            if (y < static_cast<std::size_t>(size) - 1) {
                 auto neighbour = x + (y + 1) * size;
                 if (!is_wall[neighbour]) {
                     graph[{node, neighbour}] = true;
@@ -182,7 +182,7 @@ int main(int argc, char** argv)
                 }
             }
 
-            if (x < size - 1) {
+            if (x < static_cast<std::size_t>(size) - 1) {
                 auto neighbour = x + 1 + y * size;
                 if (!is_wall[neighbour]) {
                     graph[{node, neighbour}] = true;
@@ -199,8 +199,8 @@ int main(int argc, char** argv)
             agents_initial[agent.initial] = a;
             agents_goal[agent.goal] = a;
         }
-        for(std::size_t x = 0; x < size; ++x) {
-            for(std::size_t y = 0; y < size; ++y) {
+        for(std::size_t x = 0; x < static_cast<std::size_t>(size); ++x) {
+            for(std::size_t y = 0; y < static_cast<std::size_t>(size); ++y) {
                 auto node = x + y * size;
                 if (is_wall[node]) {
                     *display_stream << "## ";

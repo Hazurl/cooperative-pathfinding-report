@@ -1,20 +1,15 @@
-#pragma once
+#include <cpf/FileSerializer.hpp>
 
-#include <iostream>
-#include <vector>
-#include <utility>
+namespace cpf {
 
-#include "Graph.hpp"
-#include "Agent.hpp"
-
-inline bool get_next_line(std::istream& is, std::string& line, std::size_t& line_num) {
+bool get_next_line(std::istream& is, std::string& line, std::size_t& line_num) {
     do {
         ++line_num;
     } while(!std::getline(is, line) || line.empty() || line.front() ==  '#');
     return static_cast<bool>(is);
 } 
 
-inline std::string get_next_line_or_throw(std::string const& error_hint, std::istream& is, std::size_t& line_num) {
+std::string get_next_line_or_throw(std::string const& error_hint, std::istream& is, std::size_t& line_num) {
     std::string line;
     if (get_next_line(is, line, line_num)) {
         return line;
@@ -23,7 +18,7 @@ inline std::string get_next_line_or_throw(std::string const& error_hint, std::is
     throw std::runtime_error("Couldn't parse file at line " + std::to_string(line_num) + "; Hint: " + error_hint);
 }
 
-inline std::pair<Graph, std::vector<Agent>> deserialize(std::istream& is) {
+std::pair<Graph, std::vector<Agent>> deserialize(std::istream& is) {
     std::size_t line_num = 0;
 
     auto str_graph_size = get_next_line_or_throw("Expecting number of nodes in graph", is, line_num);
@@ -72,7 +67,7 @@ inline std::pair<Graph, std::vector<Agent>> deserialize(std::istream& is) {
     );
 }
 
-inline void serialize(std::ostream& os, Graph const& graph, std::vector<Agent> const& agents) {
+void serialize(std::ostream& os, Graph const& graph, std::vector<Agent> const& agents) {
     os << "# Number of nodes\n";
     os << graph.size() << '\n';
 
@@ -95,4 +90,6 @@ inline void serialize(std::ostream& os, Graph const& graph, std::vector<Agent> c
     for(auto const& agent : agents) {
         os << agent.initial << ' ' << agent.goal << '\n';
     }
+}
+
 }

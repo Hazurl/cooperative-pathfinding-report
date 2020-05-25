@@ -4,19 +4,19 @@
 #include <sstream>
 #include <cmath>
 
-#include <Graph.hpp>
-#include <FileSerializer.hpp>
-#include <Agent.hpp>
-#include <CmdArg.hpp>
+#include <cpf/Graph.hpp>
+#include <cpf/FileSerializer.hpp>
+#include <cpf/Agent.hpp>
+#include <cpf/CmdArg.hpp>
 
-std::vector<std::vector<node_t>> parse_path(std::istream& is) {
-    std::vector<std::vector<node_t>> all_path;
+std::vector<std::vector<cpf::node_t>> parse_path(std::istream& is) {
+    std::vector<std::vector<cpf::node_t>> all_path;
     std::string line;
     while(std::getline(is, line)) {
         std::stringstream ss(line);
         all_path.emplace_back();
         auto& path = all_path.back();
-        node_t node;
+        cpf::node_t node;
         while(ss >> node) {
             std::cout << node << " ";
             path.push_back(node);
@@ -28,17 +28,17 @@ std::vector<std::vector<node_t>> parse_path(std::istream& is) {
 }
 
 int main(int argc, char** argv) {
-    auto args = parse_args(argc, argv);
+    auto args = cpf::parse_args(argc, argv);
 
     std::string graph_filename;
     std::string path_filename;
 
-    if (!get_argument_as_string(args, "graph", graph_filename)) {
+    if (!cpf::get_argument_as_string(args, "graph", graph_filename)) {
         std::cerr << "Parameter --graph required\n";
         return 1;
     }
 
-    if (!get_argument_as_string(args, "result", path_filename)) {
+    if (!cpf::get_argument_as_string(args, "result", path_filename)) {
         std::cerr << "Parameter --result required\n";
         return 1;
     }
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     std::ifstream graph_file(graph_filename);
     std::ifstream path_file(path_filename);
 
-    auto cpf = deserialize(graph_file);
+    auto cpf = cpf::deserialize(graph_file);
     auto& graph = cpf.first;
     auto& agents = cpf.second;
 
@@ -69,8 +69,8 @@ int main(int argc, char** argv) {
             }
 
             for(std::size_t i = 0; i < path.size() - 1; ++i) {
-                node_t from = path[i];
-                node_t to = path[i + 1];
+                cpf::node_t from = path[i];
+                cpf::node_t to = path[i + 1];
 
                 if (!graph[{from, to}] && from != to) {
                     std::cerr << "Agent #" << agent << " cross an edge that doesn't exists, ";

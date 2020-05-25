@@ -18,21 +18,21 @@
 #include <glucose-syrup-4.1/core/Dimacs.h>
 #include <glucose-syrup-4.1/simp/SimpSolver.h>
 
-#include <Clause.hpp>
-#include <Variable.hpp>
-#include <Context.hpp>
-#include <Graph.hpp>
-#include <Agent.hpp>
-#include <FileSerializer.hpp>
-#include <CmdArg.hpp>
-#include <MDD.hpp>
+#include <cpf/Clause.hpp>
+#include <cpf/Variable.hpp>
+#include <cpf/Context.hpp>
+#include <cpf/Graph.hpp>
+#include <cpf/Agent.hpp>
+#include <cpf/FileSerializer.hpp>
+#include <cpf/CmdArg.hpp>
+#include <cpf/MDD.hpp>
 
 //=================================================================================================
 Glucose::Solver* current_global_solver = nullptr;
 bool interrupted = false;
 // Terminate by notifying the solver and back out gracefully. This is mainly to have a test-case
 // for this feature of the Solver as it may take longer than an immediate call to '_exit()'.
-void SIGINT_interrupt(int signum) { 
+void SIGINT_interrupt(int) { 
     std::cout << "Interrupt!\n";
     interrupted = true;
     if (current_global_solver) {
@@ -45,7 +45,7 @@ void SIGINT_interrupt(int signum) {
 void set_cpu_limit(int lim) {
     rlimit rl;
     getrlimit(RLIMIT_CPU, &rl);
-    if (rl.rlim_max == RLIM_INFINITY || (rlim_t)lim < rl.rlim_max){
+    if (rl.rlim_max == RLIM_INFINITY || static_cast<rlim_t>(lim) < rl.rlim_max){
         rl.rlim_cur = lim;
         rl.rlim_max = lim > INT32_MAX / 2 ? INT32_MAX : lim * 2;
         std::cout << "Set cpu limit to " << lim << "s\n";
@@ -69,7 +69,7 @@ void init_glucose(int cpu_lim) {
     }
 }
 
-bool solve(Context const& context, std::vector<bool>& res) {
+bool solve(cpf::Context const& context, std::vector<bool>& res) {
     Glucose::SimpSolver solver;
 
     solver.parsing = 1;
@@ -113,8 +113,9 @@ bool solve(Context const& context, std::vector<bool>& res) {
 
     current_global_solver = nullptr;
 
-    std::vector<bool> values(solver.nVars());
-    for(std::size_t i = 0; i < solver.nVars(); ++i) {
+    auto const nvars = static_cast<std::size_t>(solver.nVars());
+    std::vector<bool> values(nvars);
+    for(std::size_t i = 0; i < nvars; ++i) {
         values[i] = solver.model[i] == l_True;
     }
 
@@ -129,43 +130,43 @@ void print_help(char const* prog_name) {
     std::cerr << "\t--min-makespan=<value> Minimum makespan researched\n";
     std::cerr << "\t--max-makespan=<value> Maximum makespan researched\n";
     std::cerr << "\t--max-time=<value>     Maximum amount of seconds to solve the CPF\n";
-    std::cerr << "\t--trust                Don't verify that a solution exists (This can be useful as the algorithm used for that is incomplete)\n";
+    std::cerr << "\t--trust                Don't verify that a solution exists (Doesn't do anything)\n";
     std::cerr << "\t--no-mdd               Don't reduce search space\n";
     std::cerr << "\t--output=<file>        Write path of all agents to <file>, each line is a path, each path is a sequence of number representing nodes\n";
 }
 
-int get_max_cpu_from_args(CmdArgMap const& args) {
+int get_max_cpu_from_args(cpf::CmdArgMap const& args) {
     long o;
-    if (get_argument_as_long(args, "max-time", o)) {
+    if (cpf::get_argument_as_long(args, "max-time", o)) {
         return static_cast<int>(o);
     } else {
         return INT32_MAX;
     }
 }
 
-int get_min_makespan(CmdArgMap const& args) {
+int get_min_makespan(cpf::CmdArgMap const& args) {
     long o;
-    if (get_argument_as_long(args, "min-makespan", o)) {
+    if (cpf::get_argument_as_long(args, "min-makespan", o)) {
         return static_cast<int>(o < 0l ? 0l : o);
     } else {
         return 0;
     }
 }
 
-int get_max_makespan(CmdArgMap const& args) {
+int get_max_makespan(cpf::CmdArgMap const& args) {
     long o;
-    if (get_argument_as_long(args, "max-makespan", o)) {
+    if (cpf::get_argument_as_long(args, "max-makespan", o)) {
         return static_cast<int>(o < 0l ? 0l : o);
     } else {
         return INT32_MAX;
     }
 }
 
-bool build_context(Context& context, Graph const& graph, std::vector<Agent> const& agents, std::size_t makespan, bool use_mdd) {
+bool build_context(cpf::Context& context, cpf::Graph const& graph, std::vector<cpf::Agent> const& agents, std::size_t makespan, bool use_mdd) {
     
-    context = Context(makespan, agents.size(), graph.size());
+    context = cpf::Context(makespan, agents.size(), graph.size());
 
-    std::vector<MDD> mdds;
+    std::vector<cpf::MDD> mdds;
     if (use_mdd) {
         mdds.reserve(agents.size());
         for(auto const& agent : agents) {
@@ -177,10 +178,10 @@ bool build_context(Context& context, Graph const& graph, std::vector<Agent> cons
         }
     }
 
-    for(int a = 0; a < agents.size(); ++a) {
+    for(std::size_t a = 0; a < agents.size(); ++a) {
         bool has_variable = false;
-        for(int t = 0; t <= makespan; ++t) {
-            for(int v = 0; v < graph.size(); ++v) {
+        for(std::size_t t = 0; t <= makespan; ++t) {
+            for(std::size_t v = 0; v < graph.size(); ++v) {
                 if (!use_mdd || mdds[a].accessible(v, t, makespan)) {
                     context.create_var(t, a, v);
                     has_variable = true;
@@ -196,13 +197,13 @@ bool build_context(Context& context, Graph const& graph, std::vector<Agent> cons
 
     // Clause #1
     // !X(t, a, v) or X(t+1, a, v) or OR(u, u -> v exists) X(t+1, a, u) 
-    for(int a = 0; a < agents.size(); ++a) {
-        for(int t = 0; t < makespan; ++t) {
-            for(int v = 0; v < graph.size(); ++v) {
+    for(std::size_t a = 0; a < agents.size(); ++a) {
+        for(std::size_t t = 0; t < makespan; ++t) {
+            for(std::size_t v = 0; v < graph.size(); ++v) {
                 if (context.contains(t, a, v)) {
                     auto x0 = !context.get_var(t, a, v); 
-                    Clause clause = x0;
-                    for(int u = 0; u < graph.size(); ++u) {
+                    cpf::Clause clause = x0;
+                    for(std::size_t u = 0; u < graph.size(); ++u) {
                         if (u == v || graph[{v, u}]) {
                             if (context.contains(t+1, a, u)) {
                                 clause |= context.get_var(t+1, a, u);
@@ -217,12 +218,12 @@ bool build_context(Context& context, Graph const& graph, std::vector<Agent> cons
 
     // Clause #2
     // !X(t, a, v) or !X(t, b, v)
-    for(int a = 0; a < agents.size(); ++a) {
-        for(int b = 0; b < agents.size(); ++b) {
+    for(std::size_t a = 0; a < agents.size(); ++a) {
+        for(std::size_t b = 0; b < agents.size(); ++b) {
             if (b == a) continue;
 
-            for(int t = 0; t <= makespan; ++t) {
-                for(int v = 0; v < graph.size(); ++v) {
+            for(std::size_t t = 0; t <= makespan; ++t) {
+                for(std::size_t v = 0; v < graph.size(); ++v) {
                     if (context.contains(t, a, v) && context.contains(t, b, v)) {
                         auto x0 = !context.get_var(t, a, v); 
                         auto x1 = !context.get_var(t, b, v); 
@@ -235,10 +236,10 @@ bool build_context(Context& context, Graph const& graph, std::vector<Agent> cons
 
     // Clause #3
     // !X(t, a, v) or !X(t, a, u)
-    for(int a = 0; a < agents.size(); ++a) {
-        for(int t = 0; t <= makespan; ++t) {
-            for(int v = 0; v < graph.size(); ++v) {
-                for(int u = 0; u < graph.size(); ++u) {
+    for(std::size_t a = 0; a < agents.size(); ++a) {
+        for(std::size_t t = 0; t <= makespan; ++t) {
+            for(std::size_t v = 0; v < graph.size(); ++v) {
+                for(std::size_t u = 0; u < graph.size(); ++u) {
                     if (u == v) continue;
                     if (context.contains(t, a, v) && context.contains(t, a, u)) {
                         auto x0 = !context.get_var(t, a, v); 
@@ -252,13 +253,13 @@ bool build_context(Context& context, Graph const& graph, std::vector<Agent> cons
 
     // Clause #4
     // !X(t, a, v) or !X(t+1, a, u) or !X(t, b, u) or !X(t+1, b, v)
-    for(int a = 0; a < agents.size(); ++a) {
-        for(int b = 0; b < agents.size(); ++b) {
+    for(std::size_t a = 0; a < agents.size(); ++a) {
+        for(std::size_t b = 0; b < agents.size(); ++b) {
             if (a == b) continue;
 
-            for(int t = 0; t < makespan; ++t) {
-                for(int v = 0; v < graph.size(); ++v) {
-                    for(int u = 0; u < graph.size(); ++u) {
+            for(std::size_t t = 0; t < makespan; ++t) {
+                for(std::size_t v = 0; v < graph.size(); ++v) {
+                    for(std::size_t u = 0; u < graph.size(); ++u) {
                         if (u == v) continue;
                         if (!graph[{v, u}]) continue;
 
@@ -297,8 +298,8 @@ bool build_context(Context& context, Graph const& graph, std::vector<Agent> cons
     }
 
     // Init
-    for(int a = 0; a < agents.size(); ++a) {
-        for(int v = 0; v < graph.size(); ++v) {
+    for(std::size_t a = 0; a < agents.size(); ++a) {
+        for(std::size_t v = 0; v < graph.size(); ++v) {
             if (context.contains(0, a, v)) {
                 auto x = context.get_var(0, a, v); 
                 if (initial_nodes_with_agents[v] == a) {
@@ -311,8 +312,8 @@ bool build_context(Context& context, Graph const& graph, std::vector<Agent> cons
     }
 
     // Goal
-    for(int a = 0; a < agents.size(); ++a) {
-        for(int v = 0; v < graph.size(); ++v) {
+    for(std::size_t a = 0; a < agents.size(); ++a) {
+        for(std::size_t v = 0; v < graph.size(); ++v) {
             if (context.contains(makespan, a, v)) {
                 auto x = context.get_var(makespan, a, v); 
                 if (goal_nodes_with_agents[v] == a) {
@@ -329,14 +330,14 @@ bool build_context(Context& context, Graph const& graph, std::vector<Agent> cons
 
 int main(int argc, char** argv)
 {
-    auto args = parse_args(argc, argv);
-    if (has_argument(args, "help") || has_argument(args, "h")) {
+    auto args = cpf::parse_args(argc, argv);
+    if (cpf::has_argument(args, "help") || cpf::has_argument(args, "h")) {
         print_help(argv[0]);
         return 0;
     }
 
     std::string input_filename;
-    if (!get_argument_as_string(args, "input", input_filename)) {
+    if (!cpf::get_argument_as_string(args, "input", input_filename)) {
         std::cerr << "Missing input file\n";
         print_help(argv[0]);
         return 3;
@@ -345,21 +346,21 @@ int main(int argc, char** argv)
     int max_cpu = get_max_cpu_from_args(args);
 
     std::pair<int, int> makespan_interval = { get_min_makespan(args), get_max_makespan(args) };
-    bool verify_solution_exists = !has_argument(args, "trust");
-    bool use_mdd = !has_argument(args, "no-mdd");
+    //bool verify_solution_exists = !cpf::has_argument(args, "trust");
+    bool use_mdd = !cpf::has_argument(args, "no-mdd");
 
     std::ifstream ifile(input_filename);
     if (!ifile) {
         std::cerr << "Unable to read file '" << input_filename << "'\n";
         return 2;
     }
-    auto deserialized_data = deserialize(ifile);
+    auto deserialized_data = cpf::deserialize(ifile);
     auto& graph = deserialized_data.first;
     auto& agents = deserialized_data.second;
 
     init_glucose(max_cpu);
 
-    Context context;
+    cpf::Context context;
     std::vector<bool> res;
 
     auto clock_all_begin = std::chrono::steady_clock::now();
@@ -415,10 +416,10 @@ int main(int argc, char** argv)
     report_total_time();
 
     std::cout << "Path of all agents:\n";
-    for(int a = 0; a < agents.size(); ++a) {
+    for(std::size_t a = 0; a < agents.size(); ++a) {
         std::cout << "\tAgent #" << a << ": ";
-        for(int t = 0; t <= makespan; ++t) {
-            for(int v = 0; v < graph.size(); ++v) {
+        for(std::size_t t = 0; t <= makespan; ++t) {
+            for(std::size_t v = 0; v < graph.size(); ++v) {
                 if (context.contains(t, a, v) && res[context.get_var(t, a, v).id]) {
                     std::cout << "#" << v << ", ";
                 }
@@ -428,7 +429,7 @@ int main(int argc, char** argv)
     }
 
     std::string output_file;
-    if (get_argument_as_string(args, "output", output_file)) {
+    if (cpf::get_argument_as_string(args, "output", output_file)) {
         std::ofstream file(output_file);
         if (!file) {
             std::cerr << "Couldn't open output file '" << output_file << "'\n";
@@ -436,9 +437,9 @@ int main(int argc, char** argv)
         }
         std::cout << "Writing to '" << output_file << "'... ";
 
-        for(int a = 0; a < agents.size(); ++a) {
-            for(int t = 0; t <= makespan; ++t) {
-                for(int v = 0; v < graph.size(); ++v) {
+        for(std::size_t a = 0; a < agents.size(); ++a) {
+            for(std::size_t t = 0; t <= makespan; ++t) {
+                for(std::size_t v = 0; v < graph.size(); ++v) {
                     if (context.contains(t, a, v) && res[context.get_var(t, a, v).id]) {
                         file << v << ' ';
                     }
