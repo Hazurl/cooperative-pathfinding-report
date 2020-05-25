@@ -246,23 +246,23 @@ $(_BUILD_DIR):
 
 $(TARGET_SOLVER): $(_BUILD_DIR) $(LIB_TO_BUILD) $(_OBJ_SRC_EXE) $(_OBJ_MAIN_SOLVER)
 	@$(call _sub-header,Linking...)
-	$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_MAIN_SOLVER) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
+	@$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_MAIN_SOLVER) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
 	@$(call _header,Executable done ($(TARGET_SOLVER)))
 
 $(TARGET_GENERATOR): $(_BUILD_DIR) $(LIB_TO_BUILD) $(_OBJ_SRC_EXE) $(_OBJ_MAIN_GENERATOR)
 	@$(call _sub-header,Linking...)
-	$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_MAIN_GENERATOR) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
+	@$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_MAIN_GENERATOR) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
 	@$(call _header,Executable done ($(TARGET_GENERATOR)))
 
 $(TARGET_VERIFIER): $(_BUILD_DIR) $(LIB_TO_BUILD) $(_OBJ_SRC_EXE) $(_OBJ_MAIN_VERIFIER)
 	@$(call _sub-header,Linking...)
-	$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_MAIN_VERIFIER) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
+	@$(CXX) $(INC_FLAG) $(FLAGS) $(_OBJ_MAIN_VERIFIER) $(_OBJ_SRC_EXE) -o "$@" $(LIBS_PATH) $(LIBS)
 	@$(call _header,Executable done ($(TARGET_VERIFIER)))
 
 
 $(BUILD_EXE_FOLDER)/$(SRC_FOLDER)/%.o: $(SRC_FOLDER)/%$(EXT_SRC_FILE) $(INC_FOLDER)/$(call header-of,%$(EXT_SRC_FILE))
 	@$(call _build-msg,$(notdir $@),$(call _join,$(_comma)$(_space),$(strip $(notdir $< $(wildcard $(word 2,$^))))))
-	$(CXX) -c $(INC_FLAG) $(FLAGS) -o "$@" "$<"
+	@$(CXX) -c $(INC_FLAG) $(FLAGS) -o "$@" "$<"
 
 
 # Just to avoid file without headers
