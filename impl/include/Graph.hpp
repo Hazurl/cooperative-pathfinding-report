@@ -1,9 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <limits>
 #include <algorithm>
 
 using node_t = std::size_t;
+constexpr node_t INVALID_NODE = std::numeric_limits<node_t>::max();
 
 class Graph {
 public:
