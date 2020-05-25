@@ -89,11 +89,11 @@
     \maketitle
 
     \begin{abstract}
-        Cette étude s'incrit dans dans le cadre du stage de fin de License à l'Université d'Angers. 
-        Il a pour motivation de résoudre le problème de recherche de chemins pour plusieurs agents sans
-        que ceux-ci n'occupent une même position.
-        Ce rapport cherche en particulier à encoder cette recherche en un problème de satisfiabilité
-        dans le but premier de minimiser le nombre d'étapes maximale pour que tous les agents aient atteint leur destination.
+        Cette étude s'incrit dans le cadre de mon stage de fin de Licence à l'Université d'Angers. 
+        Son but est la résolution du problème de recherche de chemins pour plusieurs agents
+        sans qu'ils n'occupent une même position.
+        L'encodage de ce sujet en un problème de satisfiabilité a pour objectif 
+        de minimiser le nombre d'étapes maximales pour que tous les agents aient atteint leur destination.
     \end{abstract}
 
     \newpage
@@ -104,55 +104,55 @@
     \section*{Introduction}
     \addcontentsline{toc}{section}{Introduction}
 
-    La recherche de chemin pour multiples agents ou recherche coopérative de chemin consiste à déplacer plusieurs agents sans que ceux-ci n'entrent en collision.
-    Chaque agent démarre à une position et doit atteindre une autre position. 
+    La recherche de chemins pour multiples agents ou recherche coopérative de chemins consiste 
+    à déplacer plusieurs agents sans qu'ils n'entrent en collision.
+    Chaque agent démarre à une position et doit en atteindre une autre. 
     Plus précisement, chacun doit simultanément se déplacer sans être au même moment au même endroit.
     Ce problème vise à trouver une solution optimale.
     Sachant que le terme optimal aura, dans cette recherche, pour signification de minimiser la distance du chemin
     le plus long (\ref{sec:makespan}).
 
     La résolution de ce problème est NP-difficile. 
-    C'est-à-dire que vérifier une solution peut prendre un temps polynomial mais trouver une solution se heurte à un nombre exponentiel
+    La vérification d'une solution prend un temps polynomial mais trouver une solution se heurte à un nombre exponentiel
     de cas suivant le nombre d'agents et la taille de l'environement.
 
-    Dans ce cas de figure, il est censé de convertir le problème originel en un problème de satisfiabilité
+    Dans ce cas, il est sensé de convertir le problème originel en un problème de satisfiabilité
     pour bénéficier de la rapidité des solveurs SAT modernes. 
 
     Ce travail a pour vocation de modéliser ce problème grâce un encodage simple mais efficace \cite{PSUR16} (\ref{sec:encoding})
-    et d'optimiser l'espace de recherche à l'aide d'un arbre de décision (\ref{sec:mdd}).
+    et d'optimiser l'espace de recherche à l'aide d'un arbre décisionnel (\ref{sec:mdd}).
     Puis d'implémenter cet encodage et de le faire résoudre par un solveur SAT.
 
     \newpage
     \section{Contexte}
 
-    Pour modéliser ce problème, l'environnement dans lequel les agents evoluent sera représenté par un graphe non orienté. 
-    Chaque agent est considéré comme une entité discrète positionnée sur un unique noeud du graphe.
-    Le temps sera modélisé par une séquence d'interval régulier; à chaque interval de temps, 
+    Pour modéliser ce problème, l'environnement dans lequel evoluent les agents sera représenté par un graphe non orienté. 
+    Chaque agent est considéré comme une entité discrètes positionnée sur un unique noeud du graphe.
+    Le temps sera modélisé par une séquence d'intervalle régulier; à chaque interval, 
     tout agent pourra se déplacer -- ou non -- vers un noeud voisin en suivant une arête du graphe.
-    La contrainte de conflit impose qu'à aucun moment, deux agents ne se trouvent sur un même noeud.
-    Le but de ce problème est alors de trouver, pour chaque agent, un chemin de son noeud initial à son noeud final;
-    ceci en un temps minimale. 
+    La contrainte de conflit impose qu'à aucun moment, deux agents ne se retrouvent sur un même noeud.
+    Le but de ce problème est de trouver, pour chaque agent, un chemin de son noeud initial à son noeud final, en un temps minimal. 
 
     \subsection{Modélisation formelle du problème}
 
     Soit $G = ( V, E )$, un graphe non orienté modélisant l'environement avec $V = \{v_0, v_1, \dots, v_n\}$ un ensemble fini de noeuds et 
     $E \subseteq \{\{v_i, v_j\}|v_i, v_j \in V\}$ un ensemble d'arêtes entre deux noeuds du graphe. 
-    Ainsi que $A = \{a_1, a_2, \ldots, a_m\}$ un ensemble fini d'agents, $n \leq m$. 
+    Ainsi que $A = \{a_1, a_2, \ldots, a_m\}$ un ensemble fini d'agents, $m \leq n$. 
     Le temps, comme décrit plus tôt, est divisé en intervals de temps discret $t$.
 
-    On note $\alpha_t : A \rightarrow V$ un arrangement des agents à l'interval de temps $t$, 
+    On note $\alpha_t : A \rightarrow V$ un arrangement des agents à l'intervalle de temps $t$, 
     de telle sorte que $\alpha_t(a)\in V$ désigne le noeud qu'occupe l'agent $a \in A$. 
-    Un unique agent peut être positionné sur un noeud.
+    Un seul agent peut être positionné sur un noeud.
     Par conséquent, $\alpha_t$ est uniquement inversible, et défini par $\alpha^{-1}_t(v) \in A \cup \{\bot\}$.
     Intuitivement, $\alpha^{-1}_t$ désigne l'agent occupant le noeud $v \in V$ à l'instant $t$, ou $\bot$ si le noeud est vide.
 
     \begin{definition}[Recherche coopérative de chemin]
-        Une instance d'un problème de recherche coopérative de chemin, ou CPF, sera déclarée comme le quadruplé $\Sigma = ( G, A, \alpha_0, \alpha^+ )$;
+        Une instance d'un problème de recherche coopérative de chemin, ou CPF \footnote{CPF: Cooperative pathfinding}, sera déclarée comme le quadruplé $\Sigma = ( G, A, \alpha_0, \alpha^+ )$;
         avec $\alpha_0$ et $\alpha^+$, la configuration de départ et, respectivement, de fin des agents.
         Une solution à cette instance est une séquence d'arrangements $[\alpha_0, \alpha_1, \ldots, \alpha_\tau]$ tel que $\alpha_\tau = \alpha^+$ 
         et $\alpha_{t+1}$ est une transition valide depuis $\alpha_t$ pour $t=0, 1, \ldots, \tau - 1$.
         
-        Une transition entre deux arrangements $\alpha_i$ et $\alpha_j$ est valide si et seulement si elle vérifie ces deux propriétés:
+        Une transition entre deux arrangements $\alpha_i$ et $\alpha_j$ est valide, si et seulement si, elle vérifie ces deux propriétés:
 
         \begin{itemize}
             \item[] 
@@ -160,7 +160,7 @@
                     \label{def:deplacement}
                     \forall a \in A, \alpha_i(a) = \alpha_j(a) \lor \{\alpha_i(a),\alpha_j(a)\} \in E
                 \end{gather}
-                \textbf{(Un agent ne se déplace pas, ou suit une arête du graphe)}
+                \textbf{(Un agent ne se déplace pas ou suit une arête du graphe)}
             \item[] 
                 \begin{gather}
                     \label{def:croisement}
@@ -174,13 +174,13 @@
         \label{sec:makespan}
         La durée d'une solution est le temps nécéssaire pour que tous les agents aient atteint leur destination. 
         Pour une solution $[\alpha_0, \alpha_1, \ldots, \alpha_\tau]$, sa durée est égale à $\tau$.
-        Il est aussi possible de la calculer par $max_{a \in A}\; \xi(a)$ où $\xi(a) \in \mathbb{N}$ est le coût du chemin traversé par l'agent $a$.
+        Il est aussi possible de la calculer par $max_{a \in A}\; \xi(a)$ où $\xi(a) \in \mathbb{N}$ est le nombre d'arête traversé par l'agent $a$.
     \end{definition}
 
     \subsection{Problème de satisfiabilité}
 
-    Un problème SAT ou problème de satisfiabilité est un problème de décision qui determine s'il existe une assignation de variable
-    qui rend une formule de logique propositionelle vraie.
+    Un problème SAT ou problème de satisfiabilité, est un problème de décision qui determine s'il existe une assignation de variable
+    rendant une formule de logique propositionelle vraie.
 
     \begin{definition}[Formule de logique propositionelle]
         Soit l'ensemble de valeurs booléennes $\mathbb{B} = \{\bot, \top\}$, et $\mathbf{B}$ un ensemble infini et dénombrable de variables à valeurs dans $\mathbb{B}$.
@@ -197,16 +197,16 @@
 
     \begin{definition}[Assignation]
         Pour une formule $P \in \mathbf{P}$ contenant les variables booléennes $B \subset \mathbf{B}$.
-        Une assignation $\Gamma : B \rightarrow \mathbb{B}$ attribue une valeur booléenne de $\mathbb{B}$ à chaque variable de la formule.
-        On note $\Gamma(P) \in \mathbf{P}$ la formule qui substitue chaque variable $b \in B$ de $P$ à sa valeur booléenne $\Gamma(b)$.
+        Une assignation $\Gamma : \mathbf{B} \rightarrow \mathbb{B}$ attribue une valeur booléenne de $\mathbb{B}$ à chaque variable de la formule.
+        On note $\Gamma(P) \in \mathbf{P}$ la formule qui substitue à chaque variable $b \in B$ de $P$ à sa valeur booléenne $\Gamma(b)$.
     \end{definition}
     \begin{example}
-        Soit la formule $P = a \land (b \lor \lnot c)$, et l'assignation $\Gamma = \{(a \rightarrow \bot), (b \rightarrow \top), (c \rightarrow \bot)\}$.
+        Soit $a, b, c \in \mathbf{B}$, la formule $P = a \land (b \lor \lnot c)$, et l'assignation $\Gamma = \{(a \rightarrow \bot), (b \rightarrow \top), (c \rightarrow \bot)\}$.
         Alors $\Gamma(P) = \bot \land (\top \lor \lnot \bot) = \bot$.
     \end{example}
 
     \begin{definition}[Satisfiabilité d'une formule]
-        Une formule $P \in \mathbf{P}$ est satisfiable si il existe une assignation $\Gamma$ tel que $\Gamma(P) = \top$.
+        Une formule $P \in \mathbf{P}$ est satisfiable s'il existe une assignation $\Gamma$ tel que $\Gamma(P) = \top$.
         On notera alors $\Gamma \vDash P$.
     \end{definition}
 
@@ -214,7 +214,7 @@
     \section{Traduction en problème de satisfiabilité}
 
     Obtenir une solution optimale (du point de vue de la durée de la solution) est un problème NP, il peut donc être traduit en une instance
-    d'un problème SAT. La formule propositionelle $F(\Sigma, \tau)$ est satisfiable si et seulement s'il existe une solution à $\Sigma$
+    d'un problème SAT comme le stipule le théorème de Cook. La formule propositionelle $F(\Sigma, \tau)$ est satisfiable si et seulement s'il existe une solution à $\Sigma$
     de durée maximale $\tau$.
 
     \subsection{Méthode de recherche de la solution optimale}
@@ -222,9 +222,9 @@
 
     Il existe plusieurs méthodes pour obtenir la solution optimale, la plus simple, et pourtant efficace, consiste à séquentiellement construire
     et résoudre la formule $F(\Sigma, \tau)$ pour $\tau = 0, 1, \ldots$ jusqu'à ce que $F(\Sigma, \tau)$ soit satisfiable 
-    (Pseudo-code de la stratégie est décrit dans \ref{alg:par})
+    (Pseudo-code de la stratégie est décrit dans \ref{alg:par}).
     Il est à noter que cette méthode ne termine jamais s'il n'existe pas de solution à $\Sigma$. Pour éviter ce cas, il est possible 
-    d'utiliser un algorithme polynomial tel que PUSH-AND-ROTATE \cite{WILDEPAR} (\ref{sec:par}).
+    d'utiliser un algorithme polynomial tel que PUSH-AND-ROTATE \cite{WILDEPAR} (\ref{sec:par}) vérifiant l'existence d'une solution.
 
     \begin{algorithm}
         \caption{Trouve sequentiellement la solution avec la plus petite durée qui résout $\Sigma$. 
@@ -248,15 +248,14 @@
         
     \subsection{Expansion d'un graphe dans le temps}
 
-    Un chemin dans le temps d'un agent sur le graphe $G$ n'est pas nécessairement simple, celui-ci peut utiliser plusieurs fois un même noeud.
-    Il est donc difficile de fixer un nombre de variables.
+    Un chemin dans le temps d'un agent sur le graphe $G$ n'est pas nécessairement simple, il peut utiliser plusieurs fois un même noeud.
     Pour résoudre ce problème, le graphe $G$ sera étendu dans le temps. 
     Chaque noeud aura $\tau$ synonymes représentant la visite du noeud à l'instant $t$.
     Ainsi à chaque agent pourra être attribué un chemin simple dans le graphe étendu.
 
     \begin{definition}[Expansion d'un graphe dans le temps $TEG^\tau(G)$]
-        Soit $G = ( V, E )$ un graphe non-orienté et $\tau\in \mathbb{N}$. 
-        Une expansion dans le temps du graphe $G$ avec $\tau + 1$ couche de temps (indéxé de $0$ à $\tau$) est un graphe orienté
+        Soit $G = ( V, E )$ un graphe non-orienté et $\tau\in \mathbb{N}$,
+        une expansion dans le temps du graphe $G$ avec $\tau + 1$ couche de temps (indéxé de $0$ à $\tau$) est un graphe orienté
         $TEG^\tau(G) = ( V', E' )$; avec:
         \begin{align*}
             V' = &\{v^t\;|\;v \in V \land t = 0, 1, \ldots, \tau\}\\
@@ -265,17 +264,20 @@
         \end{align*} 
     \end{definition}
 
-    La recherche coopérative de chemin de durée $\tau$ peut être vue comme une recherche d'un ensemble de chemins disjoints et sans croisement
+    La recherche coopérative de chemin de durée $\tau$ peut être considéré comme une recherche d'un ensemble de chemins disjoints et sans croisement
     dans le graphe étendu dans le temps.
 
     \begin{definition}[Ensemble de chemins disjoints et sans croisement]
-        Un ensemble de chemin $\Pi = [\pi_0, \pi_1, \ldots, \pi_m]$ dans $TEG^\tau(G)$ est disjoint et sans croisement si et seulement si
-        pour toutes les paires de chemins $\pi_i$ $\pi_j$, $i \neq j$:
+        Soit l'ensemble de chemins $\Pi = \{\pi_0, \pi_1, \ldots, \pi_m\}$ dans $TEG^\tau(G) = (V', E')$,
+        tel que pour tout $i \leq m$, $\pi_i$ connecte $v^0 \in V'$ à $u^\tau \in V'$, $v, u \in V$,
+        c'est-à-dire, $\pi_i$ est une séquence jointe d'arêtes dans $E'$. 
+        Cet ensemble $\Pi$ est dit disjoint et sans croisement si et seulement si
+        pour toutes paires de chemins $\pi_i$ $\pi_j$, $i \neq j$:
         \begin{gather}
             \label{def:chemindisjoint}
             \begin{split}
             &V(\pi_i) \cap V(\pi_j) = \emptyset\\
-            \text{avec } &V(\pi) = \{v_i^t, v_j^r\;|\;( v_i^t, v_j^r ) \in \pi\} \subseteq V'\\
+            \text{avec } &V(\pi_k) \subseteq V',\text{ l'ensemble des noeuds parcourus de }\pi_k\\
             &\textbf{(Les noeuds parcourus annotés du temps)}
             \end{split}
         \end{gather}
@@ -283,45 +285,54 @@
             \label{def:chemincroisement}
             \begin{split}
             &TE(\pi_i) \cap TE(\pi_j) = \emptyset\\
-            \text{avec } &TE(\pi) = \{\{v_i, v_j\}^t_r  \;|\; ( v_i^t, v_j^r ) \in \pi \}\\
+            \text{avec } &TE(\pi_k) = \{\{v_i, v_j\}^t_{t+1}  \;|\; ( v_i^t, v_j^{t+1} ) \in \pi_k \}\\
             &\textbf{(Les arêtes (non orientées) parcourus annotées du temps)}
             \end{split}
         \end{gather}
+
+        La propriété (\ref{def:chemindisjoint}) assure que deux chemins de $\Pi$ n'occupent un même noeud. 
+        Et (\ref{def:chemincroisement}) garanti qu'aucun croisement n'est possible.
     \end{definition}
 
     \begin{proposition}
         Une solution à un problème CPF $\Sigma = ( G, A, \alpha_0, \alpha^+ )$ avec $A = \{a_1, a_2, \ldots, a_m\}$ et de durée $\tau$,
-        existe si et seulement s'il existe un ensemble $\Pi = [\pi_0, \pi_1, \ldots, \pi_m]$ de chemins disjoints et sans croisement dans $TEG^\tau(G)$
+        existe si et seulement s'il existe un ensemble $\Pi = \{\pi_0, \pi_1, \ldots, \pi_m\}$ de chemins disjoints et sans croisement dans $TEG^\tau(G)$
         tel que $\pi_i$ connecte $\alpha_0(a_i)^0$ à $\alpha^+(a_i)^\tau$ pour $i = 1, 2, \ldots, m$.
     \end{proposition}
 
     \begin{proof}
-        Soit $\mathcal{S} = [\alpha_0, \alpha_1, \ldots, \alpha_\tau]$ une solution à un problème CPF $\Sigma = ( G, A, \alpha_0, \alpha^+ )$, avec
+        Soit un problème CPF $\Sigma = ( G, A, \alpha_0, \alpha^+ )$ et une de ses solutions 
+        $\mathcal{S} = [\alpha_0, \alpha_1, \ldots, \alpha_\tau]$, avec
         $A = \{a_1, a_2, \ldots, a_m\}$ et $G = ( V, E )$.
-        L'ensemble de chemins $\Pi = [\pi_0, \pi_1, \ldots, \pi_m]$ de $TEG^\tau(G)$ disjoints et sans croisement peut être construit à partir de $\mathcal{S}$.
-        Le chemin $\pi_i$ désigne la trajectoire de l'agent $a_i \in A$, plus particulièrement, 
-        $\pi_i = [( \alpha_0(a_i)^0, \alpha_1(a_i)^1 ), ( \alpha_1(a_i)^1, \alpha_2(a_i)^2 ),
-        \ldots, ( \alpha_{\tau-1}(a_i)^{\tau-1}, \alpha_\tau(a_i)^\tau )]$.
+        
+        L'ensemble des chemins $\Pi = \{\pi_0, \pi_1, \ldots, \pi_m\}$ de $TEG^\tau(G)$ disjoints et 
+        sans croisement peut être construit à partir de $\mathcal{S}$ en définissant le chemin
+        $\pi_i$ comme la trajectoire de l'agent $a_i \in A$. Plus particulièrement: 
+        \begin{gather*}
+            \pi_i = [( \alpha_0(a_i)^0, \alpha_1(a_i)^1 ), ( \alpha_1(a_i)^1, \alpha_2(a_i)^2 ),
+            \ldots, ( \alpha_{\tau-1}(a_i)^{\tau-1}, \alpha_\tau(a_i)^\tau )]
+        \end{gather*}
         De plus, $\pi_i$ est un chemin de $TEG^\tau(G)$ car, étant donné que $\{\alpha_t(a_i), \alpha_{t+1}(a_i)\} \in E$, 
         $( \alpha_t(a_i)^t, \alpha_{t+1}(a_i)^{t+1} ) \in E'$ 
         par construction de $TEG^\tau(G) = ( V', E' )$. 
         Evidemment, $\pi_i$ connecte $\alpha_0(a_i)^0$ à $\alpha_\tau(a_i)^\tau$.
-        Il ne reste alors plus qu'à vérifier que les chemins soient disjoints et sans croisement.
-        On sait que $V(\pi_i) = \{\alpha_0(a_i)^0, \alpha_1(a_i)^1, \ldots, \alpha_\tau(a_i)^\tau\}$, or, un arrangement ne peut affecter deux agents
+        Il ne reste plus qu'à vérifier que les chemins soient disjoints et sans croisement.
+        On sait que $V(\pi_i)$ est l'ensemble $\{\alpha_0(a_i)^0, \alpha_1(a_i)^1, \ldots, \alpha_\tau(a_i)^\tau\}$, or, un arrangement ne peut affecter deux agents
         sur un même noeud, par conséquent (\ref{def:chemindisjoint}) est respecté.
-        Aucun croisement ne peut avoir lieu (\ref{def:chemincroisement}) car sinon la transition entre deux arrangements (\ref{def:croisement}) ne serait respectée.
+        Aucun croisement ne peut avoir lieu (\ref{def:chemincroisement}) sinon la transition entre deux arrangements (\ref{def:croisement}) ne serait pas respectée.
 
         Montrons maintenant qu'il est possible de construire une solution du problème $\Sigma = ( G = ( V, E ), A, \alpha_0, \alpha^+ )$ de durée $\tau$ 
-        à partir d'un ensemble de chemins $\Pi = [\pi_0, \pi_1, \ldots, \pi_m]$ de $TEG^\tau(G)$ disjoints et sans croisement 
+        à partir d'un ensemble de chemins $\Pi = \{\pi_0, \pi_1, \ldots, \pi_m\}$ de $TEG^\tau(G)$ disjoints et sans croisement 
         où chaque chemin $\pi_i$ connecte $\alpha_0(a_i)$ à $\alpha_+(a_i)$. 
+
         Assumons l'existence d'un tel ensemble. 
         On défini alors $\alpha_t(a_i) = v_l$ avec $\pi_i = [( v_0^0, v_1^1 ), ( v_1^1, v_2^2 ), \ldots, 
-        ( v_{p-1}^{tau-1}, v_p^\tau )]$, $v_l \in V$, $l = 0, 1, \ldots, p$, $t = 0, 1, \ldots, \tau$.
+        ( v_{p-1}^{\tau-1}, v_p^\tau )]$, $v_l \in V$, $l = 0, 1, \ldots, p$, $t = 0, 1, \ldots, \tau$.
         Les chemins sont disjoints, donc les arrangements sont bien formés. 
         De plus, par construction de $TEG^\tau(G) = ( V', E' )$, pour toute arête orientée $( v^t, u^{t+1} ) \in \pi_i$ 
         implique que $v = u$ ou $\{v, u\} \in E$ (\ref{def:deplacement}). 
         Enfin aucun chemin de $\Pi$ ne se croise (\ref{def:chemincroisement}), impliquant nécéssairement que toutes transitions entre deux arrangements
-        soient valide (\ref{def:croisement}).
+        soient valides (\ref{def:croisement}).
 
 
     \end{proof}
@@ -329,10 +340,10 @@
     \subsection{Réduire l'espace de recherche}
     \label{sec:mdd}
 
-    Cette section emprunte l'idée d'un MDD (Multi-value decision diagram) de l'algorithme ICTS (\cite{ICTS}) pour réduire l'espace de recherche.
-    En effet, réduire l'espace de recherche améliore considérablement la vitesse de résolution du problème (\ref{sec:tailleclause}), 
-    cela permet de réduire le nombre de variables et la taille des clauses.
-    Intuitivement, le MDD d'un agent est le graphe n'incluant que les noeuds auquels celui-ci peut accéder dans le temps imparti.
+    Cette section emprunte l'idée d'un MDD \footnote{MDD: Multi-value decision diagram} de l'algorithme ICTS \cite{ICTS} pour réduire l'espace de recherche. 
+    Cela permet d'améliorer considérablement la vitesse de résolution du problème (\ref{sec:tailleclause}) et
+    de réduire le nombre de variables et la taille des clauses.
+    Intuitivement, le MDD d'un agent est le graphe n'incluant que les noeuds accessibles dans le temps imparti.
 
     \begin{definition}[Reduction de l'espace de recherche d'un agent $MDD_i^\tau$]
         Soit le problème CPF $\Sigma = ( G, A, \alpha_0, \alpha^+ \rangle$ avec $G = \langle V, E )$, $A = \{a_1, a_2, \ldots a_m\}$.
@@ -341,20 +352,22 @@
         $MDD_i^\tau = ( V^-, E^- )$ avec:
         \begin{align*}
             V^- =& \{v^t\;|\; \xi(\alpha_0(a_i), v) + \xi(v, \alpha^+(a_i)) \leq \tau, v^t \in V'\}\\
-            E^- =& \{( v, u ) \;|\; ( v, u ) \in E' \land v, u \in V^-\}
+            E^- =& \{( v, u ) \;|\; ( v, u ) \in E',\ v, u \in V^-\}
         \end{align*} 
     \end{definition}
 
     \begin{proposition}
         S'il existe une solution de durée $\tau$ pour un problème CPF $\Sigma = ( G, A, \alpha_0, \alpha^+ )$,
         avec $G = ( V, E )$
-        et donc un ensemble de chemin dans $TEG^\tau(G)$ disjoints et sans croisement $\Pi = [\pi_0, \pi_1, \ldots, \pi_m]$ alors tout chemin
-        $\pi_i \in \Pi$ est, de plus, dans $MDD^\tau_i$.
+        et donc un ensemble de chemins dans $TEG^\tau(G)$ disjoints et sans croisement $\Pi = \{\pi_0, \pi_1, \ldots, \pi_m\}$ alors tout chemin
+        $\pi_i \in \Pi$ est dans $MDD^\tau_i$.
     \end{proposition}
 
     \begin{proof}
-        Puisque $\pi_i$ est un chemin de longueur $\tau$, un noeud $v \in V$ tel que $\xi(\alpha_0(a_i), v) + \xi(v, \alpha^+(a_i)) > \tau$, $a_i \in A$,
-        ne peut être contenu dans $\pi_i$ (rejoindre le noeud $v$ puis atteindre la position finale requiert plus que $\tau$ déplacements).
+        Supposons l'existence d'un chemin $\pi_i$ de l'ensemble $\Pi$ qui n'est pas contenu dans $MDD_i^\tau$.
+        Alors il existe un $v \in V(\pi_i)$ tel que $\xi(\alpha_0(a_i), v) + \xi(v, \alpha^+(a_i)) > \tau$, $a_i \in A$.
+        Or $\pi_i$ est un chemin dans $TEG^\tau(G)$, c'est-à-dire de longueur $\tau$.
+        Donc tous chemins $\pi_i \in \Pi$ est un chemin dans $MDD_i^\tau$. 
     \end{proof}
 
     
@@ -362,7 +375,7 @@
     \subsection{Encodage en problème de satisfiabilité}
     \label{sec:encoding}
 
-    Pour transformer le problème de recherche de chemin, le concept de graphe étendu dans le temps est très important car
+    Pour transformer le problème de recherche de chemins, le concept de graphe étendu dans le temps est très important car
     il permet de représenter tous les arrangements possibles des agents à tout temps.
     L'encodage utilisé s'inspire de l'encodage DIRECT \cite{PSURDIRECT}, à l'exception que nos prémisses diffèrent légèrement:
     notre modèle autorise qu'un agent entre dans un noeud occupé si celui-ci contient un agent qui en sort dans le même interval de temps.
@@ -390,7 +403,7 @@
                         \\\forall a \in A, \forall v \in V, \forall t \in \{0, 1, \ldots, \tau\}
                     \end{split}
                 \end{gather}
-                \textbf{(Un agent est positionné sur un noeud au maximum par interval de temps)}
+                \textbf{(Un agent est positionné sur un noeud au maximum par intervalle de temps)}
             \item[] 
                 \begin{gather}
                     \begin{split}
@@ -398,7 +411,7 @@
                         \\\forall a \in A, \forall v \in V, \forall t \in \{0, 1, \ldots, \tau\}
                     \end{split}
                 \end{gather}
-                \textbf{(Un noeud contient un agent au maximum par interval de temps)}
+                \textbf{(Un noeud contient un agent au maximum par intervalle de temps)}
             \item[] 
                 \begin{gather}
                     \begin{split}
@@ -435,7 +448,7 @@
                 \label{equ:contrainteA}
                 \begin{split}
                     &\chi_{a, v}^t \implies \bigvee_{u\;|\;( v^t, u^{t+1} ) \in E'} \chi_{a, u}^{t+1}
-                    \\&\iff \lnot \chi_{a, v}^t \lor \bigvee_{u\;|\;( v^t, u^{t+1} ) \in E'} \chi_{a, u}^{t+1}
+                    \\\iff \qquad &\lnot \chi_{a, v}^t \lor \bigvee_{u\;|\;( v^t, u^{t+1} ) \in E'} \chi_{a, u}^{t+1}
                     \\&\forall a \in A, \forall v \in V, \forall t \in \{0, 1, \ldots, \tau-1\}
                 \end{split}
             \end{align}
@@ -445,27 +458,27 @@
                 \label{equ:contrainteB}
                 \begin{split}
                     &\chi_{a, v}^t \implies \bigwedge_{u \in V, u \neq v} \lnot \chi_{a, u}^t
-                    \\&\iff \bigwedge_{u \in V, u \neq v} (\lnot \chi_{a, v}^t \lor \lnot \chi_{a, u}^t)
+                    \\\iff \qquad &\bigwedge_{u \in V, u \neq v} (\lnot \chi_{a, v}^t \lor \lnot \chi_{a, u}^t)
                     \\&\forall a \in A, \forall v \in V, \forall t \in \{0, 1, \ldots, \tau\}
                 \end{split}
             \end{align}
-            \textbf{(Un agent est positionné sur un noeud au maximum par interval de temps)}
+            \textbf{(Un agent est positionné sur un noeud au maximum par intervalle de temps)}
         \item[] 
             \begin{align}
                 \label{equ:contrainteC}
                 \begin{split}
                     &\chi_{a, v}^t \implies \bigwedge_{b \in A, a \neq b} \lnot \chi_{b, v}^t
-                    \\&\iff \bigwedge_{b \in A, a \neq b} (\lnot \chi_{a, v}^t \lor \lnot \chi_{b, v}^t)
+                    \\\iff \qquad &\bigwedge_{b \in A, a \neq b} (\lnot \chi_{a, v}^t \lor \lnot \chi_{b, v}^t)
                     \\&\forall a \in A, \forall v \in V, \forall t \in \{0, 1, \ldots, \tau\}
                 \end{split}
             \end{align}
-            \textbf{(Un noeud contient un agent au maximum par interval de temps)}
+            \textbf{(Un noeud contient un agent au maximum par intervalle de temps)}
         \item[] 
             \begin{align}
                 \label{equ:contrainteD}
                 \begin{split}
                     &\chi_{a, v}^t \land \chi_{a, u}^{t+1} \implies \bigwedge_{b \in A, a \neq b} \lnot (\chi_{b, u}^t \land \chi_{b, v}^{t+1})
-                    \\&\iff \bigwedge_{b \in A, a \neq b} \lnot \chi_{a, v}^t \lor \lnot \chi_{a, u}^{t+1} \lor \lnot \chi_{b, u}^t \lor \lnot \chi_{b, v}^{t+1}
+                    \\\iff \qquad &\bigwedge_{b \in A, a \neq b} \lnot \chi_{a, v}^t \lor \lnot \chi_{a, u}^{t+1} \lor \lnot \chi_{b, u}^t \lor \lnot \chi_{b, v}^{t+1}
                     \\&\forall a \in A, \forall \{v, u\} \in E, \forall t \in \{0, 1, \ldots, \tau-1\}
                 \end{split}
             \end{align}
@@ -481,20 +494,21 @@
 
     Pour une formule $F(\Sigma, \tau)$ d'une instance $\Sigma=( G, A, \alpha_0, \alpha_+)$ sur le graphe $G = ( V, E )$, 
     le nombre de variables est simple à calculer: $O(\tau \cdot |A| \cdot |V|)$. 
-    Le nombre de clauses est égale à la somme du nombre de clauses ajouté par chaque type de contrainte.
-    La contrainte de déplacement sur une arête (\ref{equ:contrainteA}) ajoute $O(\tau \cdot |A| \cdot |V|)$ clauses.
-    La contrainte sur l'unicité d'une position par agent et par interval (\ref{equ:contrainteB}) ajoute $O(\tau \cdot |A|^2 \cdot |V|)$ clauses.
-    La contrainte sur l'unicité d'un agent par noeud par interval (\ref{equ:contrainteC}) ajoute $O(\tau \cdot |A| \cdot |V|^2)$ clauses.
-    Et enfin, la contrainte qui impose aucun croisement (\ref{equ:contrainteD}) ajoute $O(\tau \cdot |A|^2 \cdot |V|)$ clauses.
+    Ensuite chaque contraintes ajoutent de clauses.
+    La propriét de déplacement \ref{equ:contrainteA} contient $O(\tau \cdot |A| \cdot |V|)$ clauses.
+    La propriété sur l'unicité d'une position par agent et par intervalle \ref{equ:contrainteB} ajoute $O(\tau \cdot |A|^2 \cdot |V|)$ clauses.
+    La propriété sur l'unicité d'un agent par noeud par intervalle \ref{equ:contrainteC} ajoute $O(\tau \cdot |A| \cdot |V|^2)$ clauses.
+    Et enfin, la contrainte qui impose l'absence de croisement (\ref{equ:contrainteD}) ajoute $O(\tau \cdot |A|^2 \cdot |V|)$ clauses.
 
-    La réduction de l'espace de recherche entraîne une diminution de la taille de la formule, mais la topologie du graphe influence 
-    grandement celle-ci. C'est pour cela qu'une comparaison sera faites sur des exemples concrets (\ref{sec:compartaille}). 
+    La réduction de l'espace de recherche entraîne une diminution de la taille de la formule.
+    La topologie du graphe influence son impacte. 
+    C'est pour cette raison qu'une comparaison sera faites sur des exemples concrets (\ref{sec:compartaille}). 
 
     \newpage
     \section{Implémentation}
 
     Maintenant que le problème a été modélisé, la mise en pratique consiste à developper un programme qui traduit un problème CPF en 
-    un problème SAT et de résoudre ce dernier.
+    un problème SAT et de le résoudre.
     La première étape est résolue par l'introduction d'un nouveau format de fichier (\ref{sec:filecpf}).
     La résolution du problème SAT est effectuée par un programme externe \emph{Glucose} (\ref{sec:satsolver}). 
     Et la traduction en problème SAT sera faite simplement en suivant les formes normales conjonctives précédement définies (\ref{sec:cnf}). 
@@ -526,19 +540,19 @@
     \subsection{Utilisation du solveur SAT \emph{Glucose}}
     \label{sec:satsolver}
 
-    Pour résoudre le problème SAT, l'utilisation d'un solveur tel que \emph{Glucose} est primordial au vu de le compléxité d'un tel programme.
+    Pour résoudre le problème SAT, l'utilisation d'un solveur tel que \emph{Glucose} est primordial au vu de le compléxité de ce programme.
     Tel quel, \emph{Glucose} utilise un fichier d'entrée au format \emph{dimacs}.
     Afin d'éviter cet intermédiaire, \emph{Glucose} a été 
     légèrement modifié afin de pouvoir injecter directement les clauses.
-    Cela permet aussi d'éviter que \emph{Glucose} n'ai besoin d'être initialisé à chaque test de la méthode itérative (\ref{sec:methiter}).
+    Cela permet aussi d'éviter une intilisation de \emph{Glucose} à chaque test de la méthode itérative (\ref{sec:methiter}).
 
     \subsection{Traduction du problème CPF en problème SAT}
 
-    La création de la formule est trivial, une variable est créée pour chaque noeud du $TEG$ et les clauses sont ajoutées en
+    La création de la formule est triviale, une variable est créée pour chaque noeud du $TEG$ et les clauses sont ajoutées en
     suivant leurs définitions (\ref{sec:cnf}).
 
     La réduction de l'espace de recherche complexifie quelque peu le programme. 
-    Pour déterminer les variables nécessairement fausses, deux parcours en largeur sont utilisé à partir
+    Pour déterminer les variables nécessairement fausses, deux parcours en largeur sont utilisés à partir
     du noeud initial et final de chaque agent.
     En effet, le parcours en profondeur permet non seulement d'être calculé itérativement mais aussi d'eviter le parcours du graphe dans sa totalité.
 
@@ -562,9 +576,10 @@
     \label{sec:example}
 
     Les deux exemples d'exécution dans les sous-sections suivantes ont été établis sur le problème défini dans le fichier
-    \lstinline{impl/test/grid_test.cpf}\footnote{Voir annexe \nameref{anx:verifier}}. Celui-ci à été généré\footnote{Voir annexe \nameref{anx:generator}} à partir d'une grille de taille 10 par 10;
-    où chaque cellule a une probabilté de 10\% d'être un obstacle non traversable et 20\% d'être la cellule initiale d'un agent.
-    À chaque agent a été assigné une destination aléatoire parmis les cellules sans obsacles.
+    \lstinline{impl/test/grid_test.cpf}\footnote{Voir annexe \nameref{anx:verifier}}. Celui-ci à été généré\footnote{Voir annexe \nameref{anx:generator}} 
+    à partir d'une grille de taille 10 par 10;
+    où chaque cellule a une probabilité de 10\% d'être un obstacle non traversable et 20\% d'être la cellule initiale d'un agent.
+    À chaque agent a été assigné une destination aléatoire parmis les cellules sans obstacle.
 
     \subsubsection{Utilisation de la réduction de l'espace de recherche}
 
@@ -586,31 +601,39 @@
 
     L'utilisation d'un MDD améliore grandement l'éfficacité de l'algorithme en diminuant la taille de la formule par plusieurs
     ordres de grandeurs. Même si, pour certains problèmes, lorsque la durée maximale permet à tous les agents d'atteindre tous les noeuds
-    du graphe, la taille de la formule est la même; le temps utilisé pour construire les MDDs est en parti compensé par les itérations précédentes
-    prenant partie de cette optimisation. On peut aussi remarquer que la vérification que tout agent possède au minimum un chemin pour 
+    du graphe, la taille de la formule est la même; le temps utilisé pour construire les MDDs est en partie compensé par les itérations précédentes
+    prenant partie de cette optimisation. On peut remarquer que la vérification que tout agent possède au minimum un chemin pour 
     la durée demandée est un biproduit trivial lorsque le MDD est généré; éliminant totalement l'utilisation de solveur SAT pour cette itération. 
 
     \newpage
     \section*{Conclusion}
     \addcontentsline{toc}{section}{Conclusion}
 
-    La formalisation d'un problème de recherche coopérative de chemins nous a permis une compréhension détaillée du problème.
-    Compréhension qui a permis une conversion en un problème de satisfiabilité sans souci. L'utilisation d'un graphe étendu dans
+    La formalisation d'un problème de recherche coopérative de chemins permet une compréhension détaillée du problème
+    et une conversion en un problème de satisfiabilité sans souci. L'utilisation d'un graphe étendu dans
     le temps est essentielle pour générér une formule logique résolvant un problème CPF de durée maximale. 
-    Permettant ainsi, en augmentant la durée allouée, de déterminer une solution optimale.
+    En augmentant la durée allouée, une solution optimale est obtenable.
 
-    L'utilisation d'un solveur SAT moderne tel que \emph{Glucose} a permis d'accéder à de multiples optimisations qui bénéficient très certainement
-    à la recherche d'une solution au problème. Le choix de l'encodage DIRECT a non seulement permis une modélisant simplifiée, comparé à d'autres
-    méthodes (\cite{PSUR16}), mais aussi une implémentation rapide et sans encombre. On a aussi remarqué que la réduction de l'espace
+    L'utilisation d'un solveur SAT moderne tel que \emph{Glucose} a permis d'accéder à de multiples optimisations bénéfique
+    à la recherche d'une solution au problème. Le choix de l'encodage DIRECT a non seulement permis une modélisation simplifiée, comparé à d'autres
+    méthodes \cite{PSUR16}, mais aussi une implémentation rapide et sans encombre. On a aussi remarqué que la réduction de l'espace
     de recherche par un MDD a contribué significativement à l'efficacité du programme.
 
-    Finalement, un seul obstacle s'est développé: déterminer l'existence d'une solution à un problème CPF. La recherche tardive sur ce problème
-    n'a malheureusement pas aidé. En effet, malgré qu'il ne soit pas le point central de ce travail, l'utilisation d'un algorithme tel que
-    PUSH-AND-ROTATE \cite{WILDEPAR} qui requiert certaines conditions pour être complet est un point noir. 
+    Finalement, peu de problèmes se sont imposés. Cependant, par manque de temps, l'algorithme PUSH-AND-SPIN n'a pas pu faire partie de
+    l'implémentation finale. Même s'il n'est pas le point central du sujet, son ajout aurait sans aucun doute rendu ce programme
+    plus simple d'utilisation.
 
-    D'un point de vue personnel, ce sujet m'a apporté beaucoup. La recherche et l'élaboration d'une solution à un problème complexe est 
-    extrèmement gratifiante; que ce soit l'aspect théorique ou pratique.
+    Pour conclure, ce travail s'est engagé à définir une méthode pour obtenir une solution optimale. 
+    Seulement, minimiser la longueur du chemin le plus long a pour conséquence de ne pas contraindre la longueur des autres chemins
+    de cette solution. Par exemple, une solution contenant deux chemins de longueur $n$ n'est pas moins optimale qu'une solution 
+    avec un chemin de longueur $n$ et un autre vide. Pour résoudre ce problème, il est alors possible d'encoder une borne supérieure
+    à la somme des longueurs des chemins \cite{PSURTEG} en plus de la borne supérieure sur la durée de la solution.
 
+    Une optimisation supplémentaire peut-être aussi implémenté, en effet sur certaines instances d'un problème CPF, les agents peuvent
+    être séparés en groupes indépendants, dans le but de réduire le nombre de clauses et leurs tailles.
+    Pour sa réalisation, une division du graphe doit être présente afin qu'aucun agent d'une des deux parties ait pour destination
+    un noeud de l'autre partie du graphe. De plus la division du graphe ne doit pas empêcher toutes les solutions optimales. 
+    Sans un travail plus approfondi du sujet, cette dernière propriété est complexe à définir mais toutefois possible.
     
     \newpage
     \bibliography{biblio}
