@@ -1,13 +1,13 @@
 #pragma once
 
-#include <string>
 #include <map>
+#include <string>
 
 namespace cpf {
 
 struct CmdArg {
-    std::string name;
-    std::string value;
+	std::string name;
+	std::string value;
 };
 
 using CmdArgMap = std::map<std::string, std::string>;
@@ -18,4 +18,4 @@ bool get_argument_as_string(CmdArgMap const& args, std::string const& name, std:
 bool has_argument(CmdArgMap const& args, std::string const& name);
 bool get_argument_as_long(CmdArgMap const& args, std::string const& name, long& out);
 
-}
+} // namespace cpf

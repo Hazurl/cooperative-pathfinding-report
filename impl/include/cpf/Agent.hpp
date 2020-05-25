@@ -5,8 +5,8 @@
 namespace cpf {
 
 struct Agent {
-    node_t initial;
-    node_t goal;
+	node_t initial;
+	node_t goal;
 };
 
-}
+} // namespace cpf
