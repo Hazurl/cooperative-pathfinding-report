@@ -591,9 +591,25 @@
 
     \subsubsection{Comparaison de la taille de la formule avec et sans la réduction de l'espace de recherche}
     \label{sec:compartaille}
-    
-    TODO: Inserer tableaux de comparatifs
 
+    Le tableau suivant compare la résolution avec et sans la réduction de l'espace de recherche. Voici les exemples utilisés:
+    \begin{itemize}
+        \item \emph{Grand environement}: grille 12x12, ~15 obstacles et ~70 agents
+        \item \emph{Beaucoup d'obstacles}: grille 6x6, ~4 obstacles et ~28 agents
+        \item \emph{Beaucoup d'agents}: grille 6x6, ~15 obstacles et ~4 agents
+    \end{itemize}
+    
+    \begin{center}
+        \begin{tabular}{l|lll|lll|}
+            \cline{2-7}
+                & \multicolumn{3}{l|}{Avec MDD} & \multicolumn{3}{l|}{Sans MDD} \\ \cline{2-7} 
+                & \multicolumn{1}{l|}{\#Var} & \multicolumn{1}{l|}{\#Clauses} & Temps & \multicolumn{1}{l|}{\#Var} & \multicolumn{1}{l|}{\#Clauses} & Temps \\ \hline
+            \multicolumn{1}{|l|}{Grand environement} & 66k & 13.4M & 83s & 240k & 100M & 4100s \\ \hline
+            \multicolumn{1}{|l|}{Beaucoup d'obstacles} & 1689 & 53177 & 382ms & 9072 & 11.7M & 1970ms \\ \hline
+            \multicolumn{1}{|l|}{Beaucoup d'agents} & 53 & 208 & 1.4ms & 756 & 30k & 56ms \\ \hline
+        \end{tabular}
+    \end{center}
+    
     L'utilisation d'un MDD améliore grandement l'éfficacité de l'algorithme en diminuant la taille de la formule par plusieurs
     ordres de grandeurs. Même si, pour certains problèmes, lorsque la durée maximale permet à tous les agents d'atteindre tous les noeuds
     du graphe, la taille de la formule est la même; le temps utilisé pour construire les MDDs est en partie compensé par les itérations précédentes
@@ -643,11 +659,15 @@
     L'instance est constititué d'une grille de noeuds reliés a leurs voisins, sauf en cas d'obstacle.
     Les agents et les obstacles sont affecté alétoirement dans la grille.
 
+    \lstinputlisting[]{./usage/generator_help.txt}
+
     \subsection*{Utilisation du vérificateur/afficheur de solution}
     \label{anx:verifier}
 
     Ce programme annexe permet de vérifier le bon fonctionement du programme principale.
     Si le graphe est une grille comme produit par le générateur (Voir annexe \nameref{anx:generator}) alors la solution est
     apte à être affiché dans la console.
+
+    \lstinputlisting[]{./usage/verifier_help.txt}
 
 \end{document}

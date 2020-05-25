@@ -4,9 +4,3 @@ Usage: ./build/verifier <options> --graph=<file.cpf> --result=<file.res_cpf>
 	--result=<file>  File outputted by the solver when solving the problem in --graph [REQUIRED]
 Options:
 	--show-as-grid   Print the successives time steps, the graph *must be* a squared grid, like the problems produced by the generator
-Parameter --graph required
-Usage: ./build/verifier <options> --graph=<file.cpf> --result=<file.res_cpf>
-	--graph=<file>   File in CPF format describing the graph and the agents [REQUIRED]
-	--result=<file>  File outputted by the solver when solving the problem in --graph [REQUIRED]
-Options:
-	--show-as-grid   Print the successives time steps, the graph *must be* a squared grid, like the problems produced by the generator
