@@ -33,6 +33,7 @@ bool interrupted					   = false;
 // Terminate by notifying the solver and back out gracefully. This is mainly to have a test-case
 // for this feature of the Solver as it may take longer than an immediate call to '_exit()'.
 void SIGINT_interrupt(int) {
+	// Try to interrupt softly the solver
 	std::cout << "Interrupt!\n";
 	interrupted = true;
 	if (current_global_solver) {
@@ -43,6 +44,8 @@ void SIGINT_interrupt(int) {
 
 
 void set_cpu_limit(int lim) {
+	// Set limits in seconds to the cpu
+	// The hard limit, e.g. the app is killed after twice the amount of seconds
 	rlimit rl;
 	getrlimit(RLIMIT_CPU, &rl);
 	if (rl.rlim_max == RLIM_INFINITY || static_cast<rlim_t>(lim) < rl.rlim_max) {
@@ -72,6 +75,7 @@ void init_glucose(int cpu_lim) {
 }
 
 bool solve(cpf::Context const& context, std::vector<bool>& res) {
+	// Setup glucose's SAT solver
 	Glucose::SimpSolver solver;
 
 	solver.parsing			  = 1;
@@ -90,6 +94,7 @@ bool solve(cpf::Context const& context, std::vector<bool>& res) {
 		for (auto const& var : clause.variables) {
 			while (var.id >= solver.nVars()) { solver.newVar(); }
 
+			// Push each clauses
 			glucose_clause.push(Glucose::mkLit(var.id, var.negated));
 
 			if (interrupted)
@@ -171,6 +176,8 @@ bool build_context(
 	bool use_mdd) {
 	context = cpf::Context(makespan, agents.size(), graph.size());
 
+	// Create the context, and fill it with the clauses
+
 	std::vector<cpf::MDD> mdds;
 	if (use_mdd) {
 		mdds.reserve(agents.size());
@@ -190,6 +197,7 @@ bool build_context(
 			}
 		}
 
+		// If an agent has no path, no solution could exist, early exit
 		if (!has_variable) {
 			std::cout << "\tNo path for agent " << a << " found in the MDD\n";
 			return false;
@@ -332,6 +340,7 @@ bool build_context(
 }
 
 int main(int argc, char** argv) {
+	// Setup args
 	auto args = cpf::parse_args(argc, argv);
 	if (cpf::has_argument(args, "help") || cpf::has_argument(args, "h")) {
 		print_help(argv[0]);
@@ -371,6 +380,8 @@ int main(int argc, char** argv) {
 		std::chrono::duration<double, std::milli> duration = clock_all_end - clock_all_begin;
 		std::cout << "Total time: " << duration.count() << "ms\n";
 	};
+
+	// Start iterative methods
 
 	int makespan;
 	for (makespan = makespan_interval.first; makespan <= makespan_interval.second && !interrupted; ++makespan) {
@@ -417,6 +428,7 @@ int main(int argc, char** argv) {
 	std::cout << "\tSuccessfully solved\n";
 	report_total_time();
 
+	// Display path
 	std::cout << "Path of all agents:\n";
 	for (std::size_t a = 0; a < agents.size(); ++a) {
 		std::cout << "\tAgent #" << a << ": ";
@@ -430,6 +442,7 @@ int main(int argc, char** argv) {
 		std::cout << '\n';
 	}
 
+	// Writing path to file if requested
 	std::string output_file;
 	if (cpf::get_argument_as_string(args, "output", output_file)) {
 		std::ofstream file(output_file);

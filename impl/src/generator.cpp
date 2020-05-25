@@ -54,6 +54,7 @@ int get_agent_percent(cpf::CmdArgMap const& args) {
 
 
 int main(int argc, char** argv) {
+	// Setup arguments
 	auto args = cpf::parse_args(argc, argv);
 	if (cpf::has_argument(args, "help") || cpf::has_argument(args, "h")) {
 		print_help(argv[0]);
@@ -100,6 +101,7 @@ int main(int argc, char** argv) {
 	int wall_percent  = get_wall_percent(args);
 	int agent_percent = get_agent_percent(args);
 
+	// Snity checks
 	if (size <= 0) {
 		std::cerr << "Size must not be negative\n";
 		print_help(argv[0]);
@@ -128,6 +130,9 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
+	// Generating a grid, each cells can be an obstacles or not given the percentage
+	// The agents are randomly created and selected a pair of non-obstacles cells as initial and goal.
+
 	std::vector<bool> is_wall(static_cast<std::size_t>(nodes_count));
 	std::vector<cpf::Agent> agents(static_cast<std::size_t>(agent_count));
 	cpf::Graph graph(static_cast<std::size_t>(nodes_count));
@@ -150,6 +155,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	// Create the edges between the cells without obstacles
 	for (std::size_t x = 0; x < static_cast<std::size_t>(size); ++x) {
 		for (std::size_t y = 0; y < static_cast<std::size_t>(size); ++y) {
 			auto node = x + y * size;
@@ -188,6 +194,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	// Display the grid if requested
 	if (display_stream != nullptr) {
 		std::unordered_map<std::size_t, std::size_t> agents_initial;
 		std::unordered_map<std::size_t, std::size_t> agents_goal;

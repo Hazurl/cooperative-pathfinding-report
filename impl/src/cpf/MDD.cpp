@@ -9,6 +9,11 @@ MDD::MDD(Graph const& graph_, Agent const& agent_) noexcept
 	, next_nodes_initial{ { agent_.initial } }
 	, next_nodes_goal{ { agent_.goal } } {}
 
+
+/*
+	Perform two breadth-first-search, one from the end and one from the start
+	essentially calculating if `dist(start, v) + dist(v, end) <= makespan` for each nodes
+*/
 void MDD::step() noexcept {
 	std::vector<node_t> next_next_initial;
 	std::vector<node_t> next_next_goal;

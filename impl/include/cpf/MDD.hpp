@@ -9,6 +9,9 @@
 
 namespace cpf {
 
+/*
+	Class encapsulating a MDD, which is also able to iteratively increment the distance
+*/
 class MDD {
 private:
 	struct Distance {

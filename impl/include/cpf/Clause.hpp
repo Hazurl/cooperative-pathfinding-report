@@ -5,8 +5,10 @@
 
 namespace cpf {
 
-// A clause is a series of `or` where each term is a variable negated or not
-// it need to be this way because the solver expect clause in conjunction normal form
+/*
+ 	A clause is a series of `or` where each term is a variable negated or not
+	It need to be this way because the solver expect clause in conjunction normal form
+*/
 
 class Clause {
 public:
@@ -17,6 +19,9 @@ public:
 	std::vector<Variable> variables;
 };
 
+/*
+	Syntax appealing methods to 'or' together multiples variables
+*/
 Clause operator|(Variable const& lhs, Variable const& rhs);
 Clause& operator|=(Clause& lhs, Variable const& rhs);
 Clause&& operator|(Clause&& lhs, Variable const& rhs);

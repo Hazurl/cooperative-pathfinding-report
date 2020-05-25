@@ -10,6 +10,18 @@ CmdArg parse_single_arg(std::string const& arg) {
 	std::size_t start_name = arg.find_first_not_of('-');
 	std::size_t equal_idx  = arg.find_first_of('=');
 
+	/*
+		xxx=yyy 
+		=>
+		{ xxx, yyy }
+
+		and
+
+		xxx
+		=>
+		{ xxx, "" }
+	*/
+
 	return { arg.substr(start_name, equal_idx - start_name),
 			 equal_idx == std::string::npos ? std::string{} : arg.substr(equal_idx + 1) };
 }

@@ -37,6 +37,7 @@ void print_help(char const* prog_name) {
 }
 
 int main(int argc, char** argv) {
+	// Setup args
 	auto args = cpf::parse_args(argc, argv);
 
 	std::string graph_filename;
@@ -66,12 +67,14 @@ int main(int argc, char** argv) {
 	if (all_path.size() != agents.size()) {
 		std::cerr << "Result file doesn't have a path for all agents\n";
 	} else {
+		// Check validity
 		for (std::size_t agent = 0; agent < all_path.size(); ++agent) {
 			auto const& path = all_path[agent];
 
 			if (path.empty())
 				continue;
 
+			// A path must connect the initial and the goal of the agent
 			if (path.front() != agents[agent].initial) {
 				std::cerr << "Agent #" << agent << " doesn't start from the initial node #" << agents[agent].initial
 						  << ", was on #" << path.front() << '\n';
@@ -86,11 +89,13 @@ int main(int argc, char** argv) {
 				cpf::node_t from = path[i];
 				cpf::node_t to	 = path[i + 1];
 
+				// The edge must exists
 				if (!graph[{ from, to }] && from != to) {
 					std::cerr << "Agent #" << agent << " cross an edge that doesn't exists, ";
 					std::cout << "at timestamp #" << i << ", between node #" << from << " and #" << to << '\n';
 				}
 
+				// No collision
 				for (std::size_t other_agent = agent + 1; other_agent < all_path.size(); ++other_agent) {
 					auto const& other_path = all_path[other_agent];
 					if (other_path[i + 1] == from && other_path[i] == to) {
@@ -116,6 +121,7 @@ int main(int argc, char** argv) {
 
 	std::cout << "Showing time steps:\n";
 
+	// Show the solution, the graph must be a grid
 	auto size			 = std::sqrt(graph.size());
 	std::size_t max_time = all_path.empty() ? 0 : all_path[0].size();
 	for (std::size_t t = 0; t < max_time; ++t) {

@@ -8,6 +8,9 @@
 
 namespace cpf {
 
+/*
+	Holds all the clauses, also make the bridge between variable's id and the tuple (index, agent_id, node)
+*/
 class Context {
 public:
 	Context() = default;
